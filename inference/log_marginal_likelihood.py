@@ -66,7 +66,7 @@ def full(scaledparams, x, y, zstates):
     nvar = x.shape[0]
     nsample = x.shape[1]
     constpi = math.pi
-    kmarglik = 0
+    marglik_k = 0
     lmlzlist = list()
     logk = 0
 
@@ -109,7 +109,7 @@ def iterative_inverse(pi, mu, sigma, sigmabg, tau, x, y, zstates, grad = True):
     nvar = x.shape[0]
     nsample = x.shape[1]
     constpi = math.pi
-    kmarglik = 0
+    marglik_k = 0
     lmlzlist = list()
     BZinvlist = list()
     Sinvlist = list()

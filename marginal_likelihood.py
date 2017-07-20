@@ -26,7 +26,7 @@ opts = parse_args()
 pi = 0.1
 mu = 0.0
 sigmabg = 0.001
-sigma = 0.01
+sigma = 0.03
 sigerr = 0.05
 tau = 1 / sigerr / sigerr
 

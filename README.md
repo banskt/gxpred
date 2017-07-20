@@ -7,6 +7,9 @@ This is the development branch of Gene Expression Prediction Algorithm, under th
 * Development of GxPRED
 * v0.01
 
+### How to run? ###
+`python marginal_likelihood.py --params 0.01 0.0 0.01 0.01 300`
+
 ### Next updates ###
 
 * Port python function and gradient to C++
