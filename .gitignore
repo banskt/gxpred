@@ -9,3 +9,6 @@ __pycache__/
 
 # cProfile
 *.prof
+
+# my own gvim IDE
+.vimrc

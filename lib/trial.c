@@ -1,4 +1,3 @@
-#define DLLEXPORT extern "C"
 #include <stdio.h>	/* printf */
 #include <math.h>	/* log */
 #include "mkl.h"
@@ -6,7 +5,7 @@
 // Calculate v'Bv where B is a NxN symmetric matrix
 // and v is a vector of length N
 //
-DLLEXPORT double vTBSYMv( int n, double* v, double* B) {
+double vTBSYMv( int n, double* v, double* B) {
 
     double one = 1.0;
     double zero = 0.0;
@@ -44,7 +43,7 @@ void axxT (int I, int N, double alpha, double* A, double* C) {
    B is a I x I matrix.
    result is N x N
 */
-DLLEXPORT int xTBx(int I, int N, double alpha, double* X, double* B, double* C) {
+int xTBx(int I, int N, double alpha, double* X, double* B, double* C) {
 
     double zero = 0.0;
     double one = 1.0;
@@ -65,14 +64,13 @@ DLLEXPORT int xTBx(int I, int N, double alpha, double* X, double* B, double* C) 
 }
 
 
-DLLEXPORT double matloginv (int n, double* A) {
+double matloginv (int n, double* A) {
 
     int i, j;
     int info;
     double ldet;
 
-    // Cholesky factorization of a symmetric (Hermitian) positive-definite matrix
-    // dpotrf("L", &n, A, &n, &info);
+    /* Cholesky factorization of a symmetric (Hermitian) positive-definite matrix */
     info = LAPACKE_dpotrf (LAPACK_ROW_MAJOR, 'L', n , A, n);
     if (info != 0) {
         printf ("C++ Error: Cholesky factorization failed. Aborting... \n");
@@ -80,21 +78,20 @@ DLLEXPORT double matloginv (int n, double* A) {
     }
 
 
-    // get the log determinant
     ldet = 0.0;
     for (i = 0; i < n; i++) {
         ldet += 2 * log(A[i * n + i]);
     }
-    //*log_det = ldet;
 
-    // inverse of a symmetric (Hermitian) positive-definite matrix using the Cholesky factorization.
-    // dpotri("L", &n, A, &n, &info);
+ /* inverse of a symmetric (Hermitian) positive-definite matrix using the Cholesky factorization.
+ *
+ */
     info = LAPACKE_dpotri (LAPACK_ROW_MAJOR, 'L', n, A, n);
     if(info != 0) {
         printf ("C++ Error: Matrix inversion failed. Aborting... \n");
         exit(0);
     } else {
-    // overwrite the upper half
+    /* overwrite the upper half */
         for (i = 0; i < n; i++) {
             for (j = i+1; j < n; j++) {
                 A[ i*n+j ] = A[ j*n+i];

@@ -13,7 +13,7 @@ def func_grad(scaledparams, x, y, zstates):
     sigmabg = params[3]
     tau = params[4]
 
-    logmarglik, der, pz = iterative_inverse(pi, mu, sigma, sigmabg, tau, x, y, zstates)
+    logmarglik, der, pz, l = iterative_inverse(pi, mu, sigma, sigmabg, tau, x, y, zstates)
     der = hyperparameters.gradscale(params, der)
 
     #delta = 0.0001
@@ -37,7 +37,7 @@ def func(scaledparams, x, y, zstates):
     sigmabg = params[3]
     tau = params[4]
 
-    logmarglik, der, pz = iterative_inverse(pi, mu, sigma, sigmabg, tau, x, y, zstates, grad = False)
+    logmarglik, der, pz, l = iterative_inverse(pi, mu, sigma, sigmabg, tau, x, y, zstates, grad = False)
 
     return -logmarglik
 
@@ -49,9 +49,22 @@ def prob_comps(scaledparams, x, y, zstates):
     sigmabg = params[3]
     tau = params[4]
 
-    logmarglik, der, pz = iterative_inverse(pi, mu, sigma, sigmabg, tau, x, y, zstates, grad = False)
+    logmarglik, der, pz, l = iterative_inverse(pi, mu, sigma, sigmabg, tau, x, y, zstates, grad = False)
 
     return pz
+
+def raw_comps(scaledparams, x, y, zstates):
+    params = hyperparameters.descale(scaledparams)
+    pi = params[0]
+    mu = params[1]
+    sigma = params[2]
+    sigmabg = params[3]
+    tau = params[4]
+
+    logmarglik, der, pz, l = iterative_inverse(pi, mu, sigma, sigmabg, tau, x, y, zstates, grad = False)
+
+    return l
+
 
 def mat3mul(A, B, C):
     return np.dot(A, np.dot(B, C))
@@ -113,6 +126,7 @@ def iterative_inverse(pi, mu, sigma, sigmabg, tau, x, y, zstates, grad = True):
     lmlzlist = list()
     BZinvlist = list()
     Sinvlist = list()
+    _tmplist = list()
     logk = 0
 
     sigma2 = sigma * sigma
@@ -143,6 +157,7 @@ def iterative_inverse(pi, mu, sigma, sigmabg, tau, x, y, zstates, grad = True):
     #kmarglik += np.exp(lmlz)
     #lmlzlist.append(lmlz - logk)
     lmlzlist.append(log_probz + log_normz)
+    _tmplist.append(y[0])
     BZinvlist.append(B0inv)
     Sinvlist.append(Sinv)
 
@@ -182,6 +197,7 @@ def iterative_inverse(pi, mu, sigma, sigmabg, tau, x, y, zstates, grad = True):
 
         # Combine the log values
         lmlzlist.append(log_probz + log_normz)
+        _tmplist.append(y[0])
         BZinvlist.append(BZinv)
         Sinvlist.append(Sinv)
 
@@ -198,7 +214,7 @@ def iterative_inverse(pi, mu, sigma, sigmabg, tau, x, y, zstates, grad = True):
     else:
         der = np.zeros(5)
 
-    return logmarglik, der, pz
+    return logmarglik, der, pz, _tmplist
     #return -logmarglik, -der, pz
 
 def gradients(pi, mu, sigma, sigmabg, tau, x, y, zstates, pz, BZinvlist, Sinvlist):
@@ -219,6 +235,7 @@ def gradients(pi, mu, sigma, sigmabg, tau, x, y, zstates, pz, BZinvlist, Sinvlis
         nz = len(z)
         picomp = nz / pi - (nvar - nz) / (1 - pi)
         pi_grad += pz[i] * picomp
+        #print (pi_grad)
 
 
         if nz == 0:
