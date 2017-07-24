@@ -1,6 +1,6 @@
-CC := gcc -O3
+CC := gcc
 LIBFLAGS := -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_ilp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread -lm -ldl
-SHAREFLAGS := -shared -fPIC
+SHAREFLAGS := -O3 -shared -fPIC
 
 #trial: trial.o
 #	$(CC) $< $(LIBFLAGS) -o $@
@@ -8,11 +8,8 @@ SHAREFLAGS := -shared -fPIC
 #	$(CC) -c $< -o $@
 #
 
-margloglik.so: margloglik.c
-	$(CC) $< $(LIBFLAGS) $(SHAREFLAGS) -o $@
-
-trial.so: trial.c
+logmarglik.so: logmarglik.c
 	$(CC) $< $(LIBFLAGS) $(SHAREFLAGS) -o $@
 
 clean:
-	rm -rf margloglik.so
+	rm -rf logmarglik.so

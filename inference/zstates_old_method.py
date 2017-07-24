@@ -3,7 +3,7 @@
 import numpy as np
 import os
 import ctypes
-from inference import log_marginal_likelihood
+from inference import logmarglik
 
 def create(scaledparams, x, y, cmax, nvar, target):
 
@@ -28,7 +28,7 @@ def create(scaledparams, x, y, cmax, nvar, target):
     while norm < cmax:
 
         # Stop iteration if sum(new posterior) is < 0.02 times sum(old posterior)
-        posterior   = log_marginal_likelihood.prob_comps(scaledparams, x, y, zstates)
+        posterior   = logmarglik.prob_comps(scaledparams, x, y, zstates)
         prob        = np.array(posterior[-len(newk):])
         old_prob    = np.array(posterior[:len(oldk)])
         probsum     = np.sum(prob)
