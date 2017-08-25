@@ -10,10 +10,8 @@ This is the development branch of Gene Expression Prediction Algorithm, under th
 ### How to run? ###
 `python marginal_likelihood.py --params 0.01 0.0 0.01 0.01 300`
 
-### Next updates ###
+### Countdown to deployment ###
 
-* Port python function and gradient to C++
-* Callback zstates during optimization
 * Expectation of gene expression given new genotype
 * I/O for learning
 * I/O for prediction
