@@ -10,7 +10,7 @@ import gzip
 from utils.containers import GeneInfo
 
 
-def gencode_v12(filepath, feature = 'gene', biotype=['protein_coding'], include_chroms=['{:d}'.format(x + 1) for x in range(22)]):
+def gencode_v12(filepath, feature = 'gene', biotype=['protein_coding'], include_chrom = 0, include_chroms=['{:d}'.format(x + 1) for x in range(22)]):
     annotfile = os.path.realpath(filepath)
     geneinfo = list()
     try:
@@ -20,6 +20,7 @@ def gencode_v12(filepath, feature = 'gene', biotype=['protein_coding'], include_
                 if linesplit[0][0] == '#' or linesplit[2] != feature: continue # skip header
 
                 chrom = linesplit[0][3:]
+                include_chroms = ['{:d}'.format(include_chrom)]
                 if chrom not in include_chroms: continue
 
                 # Any particular biotype selected?
@@ -42,7 +43,7 @@ def gencode_v12(filepath, feature = 'gene', biotype=['protein_coding'], include_
                 gene_name = infolist[4].strip().split(' ')[1].replace('"','')
                 this_gene = GeneInfo(name       = gene_name,
                                      ensembl_id = gene_id,
-                                     chrom      = chrom,
+                                     chrom      = int(chrom),
                                      start      = start,
                                      end        = end)
 

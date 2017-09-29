@@ -21,6 +21,7 @@
 #include <stdio.h>      /* printf */ 
 #include <math.h>       /* log, exp */
 #include "mkl.h"
+//#include "profiler.h"
 
 #define _PI 3.141592653589793
 
@@ -108,44 +109,19 @@ a_matT_matb_mat ( int m, int n, double alpha, double* A, double* B, double* C, d
     
 }		/* -----  end of function a_matT_matb_mat  ----- */
 
-
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  smat_vec
- *  Description:  calculate Aw, where
- *                A is a n-by-n symmetric matrix
- *                w is a vector of size n
- *                D holds the result, vector of size n
- * =====================================================================================
- */
     void
-smat_vec ( int n, double* A, double* w, double* D )
+a_matT_matb_mat_debug ( int m, int n, double alpha, double* A, double* B, double* C, double* D )
 {
     double zero = 0.0;
-    double one  = 1.0;
-    cblas_dsymv(CblasRowMajor, CblasLower, n, one, A, n, w, 1, zero, D, 1);
+    double one = 1.0;
 
-}		/* -----  end of function smat_vec  ----- */
-
-
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  mat_vec
- *  Description:  calculate alpha * Aw, where:
- *                A is a m-by-n general matrix
- *                w is a vector of size n
- *                D holds the result, vector of size m
- * =====================================================================================
- */
-    void
-mat_vec ( int m, int n, double alpha, double* A, double* w, double* D )
-{
-    double zero = 0.0;
-    cblas_dgemv(CblasRowMajor, CblasNoTrans, m, n, alpha, A, n, w, 1, zero, D, 1);
-
-}		/* -----  end of function mat_vec  ----- */
-
-
+    printf("m, n, alpha: %d, %d, %f\n", m, n, alpha);
+    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, m, one,   B, m, A, n, zero, D, n);
+    printf("D = Binv * x done.\n");
+    //cblas_dgemm(CblasRowMajor, CblasTrans,   CblasNoTrans, n, n, m, alpha, A, n, D, n, zero, C, n);
+    //printf("C = x * D done.\n");
+ 
+}               /*  -----  end of function a_matT_matb_mat  ----- */
 
 
 /* 
@@ -325,6 +301,7 @@ get_zcomps ( int nsnps, int nsample, int zlen,
         BZINV[i] = B_INV[i];
     }
 
+    printf("Initialized matrices for %d zcomps\n", zlen);
     zindx = 0;
     for (z = 0; z < zlen; z++) {
         nz = ZNORM[z];
@@ -337,35 +314,78 @@ get_zcomps ( int nsnps, int nsample, int zlen,
         }
         logBZdet = logB0det;
         
+        if (z > 2050) {
+            printf("zstate: %d, Norm: %d, Elements: ", z, nz);
+        }
         for (i = 0; i < nz; i++) {
             zpos = ZARR[zindx + i];
+            if (z > 2050) {
+                printf("%d ", zpos);
+            }
             mod_denom = 1 + hdiff * B_INV[ zpos*nsnps + zpos ];
             mod = hdiff / mod_denom;
             logBZdet += log(mod_denom);
-            binv_update(nsnps, zpos, mod, B_INV, DUM1, DUM2);
+            if (mod != 0) {
+                binv_update(nsnps, zpos, mod, B_INV, DUM1, DUM2);
+            }
             for (j = 0; j < nsample; j++) {
                 GX_MZ[j] -= mu * GT[ zpos*nsample + j ];
             }
         }
+        if (z > 2050) {
+            printf("\n");
+        }
         
+        if (z > 2050) {
+            printf("log_probz \n");
+        }
         log_probz = nz * log(pi) + (nsnps - nz) * log(1 - pi);
         
 //      No need to initialize S_INV, because it will be overwritten.
 //      DUM3 is a nsnps-by-nsample matrix which is only used as a scratch
+        if (z > 2050) {
+            printf("xT_Binv_x \n");
+            printf("mod: %f %f %f\n", hdiff, mod_denom, mod);
+            printf("nsnps, nsample, alpha: %d, %d, %f\n", nsnps, nsample, (-tau * tau));
+            printf("%f %f %f\n", B_INV[0], B_INV[1], B_INV[2]);
+            a_matT_matb_mat_debug ( nsnps, nsample, (-tau*tau), GT, B_INV, S_INV, DUM3);
+        }
         a_matT_matb_mat ( nsnps, nsample, (-tau*tau), GT, B_INV, S_INV, DUM3 );
+        if (z > 2050) {
+            printf("add tau \n");
+        }
         for (i = 0; i < nsample; i++) {
             S_INV[ i*nsample + i ] += tau;
         }
+
+        if (z > 2050) {
+            printf("logSZdet \n");
+        }
         logSZdet = - (nsample * log(tau)) + ((nsnps - nz) * log(sigmabg2)) + (nz * log(sigma2)) + logBZdet;
+        if (z > 2050) {
+            printf("nterm \n");
+        }
         nterm = vecT_smat_vec ( nsample, GX_MZ, S_INV, DUM4 );
 
+        if (z > 2050) {
+            printf("log_normz \n");
+        }
         log_normz = - 0.5 * (logSZdet + (nsample * log(2 * _PI)) + nterm);
         
-        ZCOMPS[z] = log_probz + log_normz;
         //ZCOMPS[z] = GX[0];
+        if (z > 2050) {
+            printf("ZCOMPS[z] \n");
+        }
+        ZCOMPS[z] = log_probz + log_normz;
         
+        if (z > 2050) {
+            printf("BZINV \n");
+        }
         for (i = 0; i < (nsnps*nsnps); i++) {
             BZINV[ z*nsnps*nsnps + i ] = B_INV[i];
+        }
+        if (z > 2050) {
+            printf("SZINV \n");
         }
         for (i = 0; i < (nsample*nsample); i++) {
             SZINV[ z*nsample*nsample + i ] = S_INV[i];
@@ -374,6 +394,7 @@ get_zcomps ( int nsnps, int nsample, int zlen,
         zindx += nz;
     
     }
+    printf("Computed ZCOMPS\n");
 
     mkl_free(B_INV);
     mkl_free(S_INV);
@@ -559,94 +580,6 @@ get_grad ( int nsnps, int nsample, int zlen,
 }		/* -----  end of function get_grad  ----- */
 
 
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  get_zexp
- *  Description:  Calculate the mean of P(v_tg | x, y, theta, tau)
- *                It is denoted as M_vz in the theory.
- *                For every z-state, M_vz is a vector of size I.
- *                The result is stored in a single array ZEXP of size nz * I.
- * =====================================================================================
- */
-    void
-get_zexp ( int nsnps, int nsample, int zlen, 
-             double pi, double mu, double sigma, double sigmabg, double tau,
-             int* ZARR, int* ZNORM, 
-             double* GT, double* GX,
-             double* BZINV, double* ZEXP )
-{
-
-    double* GT_GX;
-    double* M_VZ_;
-    double* FACT0;
-    double* FACTZ;
-    double* S_VZ_;
-
-    double sigma2;
-    double sigmabg2;
-
-    int i, z, zpos, zindx, nz;
-
-    S_VZ_ = (double *)mkl_malloc( nsnps * nsnps * sizeof( double ), 64 );
-    M_VZ_ = (double *)mkl_malloc(         nsnps * sizeof( double ), 64 );
-    GT_GX = (double *)mkl_malloc(         nsnps * sizeof( double ), 64 );
-    FACT0 = (double *)mkl_malloc(         nsnps * sizeof( double ), 64 );
-    FACTZ = (double *)mkl_malloc(         nsnps * sizeof( double ), 64 );
-
-    if ( S_VZ_ == NULL || M_VZ_ == NULL || GT_GX == NULL || FACT0 == NULL || FACTZ == NULL ) {
-        printf( "C++ Error: Can't allocate memory GT_GX. Aborting... \n");
-        mkl_free(M_VZ_);
-        mkl_free(S_VZ_);
-        mkl_free(GT_GX);
-        mkl_free(FACT0);
-        mkl_free(FACTZ);
-        exit(0);
-    }
-
-    sigma2 = sigma * sigma;
-    sigmabg2 = sigmabg * sigmabg;
-
-    for ( i = 0; i < nsnps; i++ ) {
-        GT_GX[i] = 0.0;
-    }
-    mat_vec ( nsnps, nsample, tau, GT, GX, GT_GX );
-    for ( i = 0; i < nsnps; i++ ) {
-        FACT0[i] = GT_GX[i] + (mu / sigmabg2);
-    }
-
-    zindx = 0;
-    for ( z = 0; z < zlen; z++ ) {
-
-        nz = ZNORM[z];
-
-        for ( i = 0; i < nsnps; i++ ) {
-            FACTZ[i] = FACT0[i];
-        }
-        for ( i = 0; i < nz; i++ ) {
-            zpos = ZARR[zindx + i];
-            FACTZ[zpos] += (mu / sigma2) - (mu / sigmabg2);
-        }
-        for (i = 0; i < (nsnps*nsnps); i++) {
-            S_VZ_[i] = BZINV[ z*nsnps*nsnps + i ];
-        }
-        smat_vec ( nsnps, S_VZ_, FACTZ, M_VZ_ );
-
-        for ( i = 0; i < nsnps; i++ ) {
-            ZEXP[ z * nsnps + i ] = M_VZ_[i];
-        }
-
-        zindx += nz;
-
-    }
-
-    mkl_free(M_VZ_);
-    mkl_free(S_VZ_);
-    mkl_free(GT_GX);
-    mkl_free(FACT0);
-    mkl_free(FACTZ);
-
-}		/* -----  end of function get_zexp  ----- */
-
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -664,14 +597,12 @@ logmarglik ( int     nsnps,
              double  sigmabg,
              double  tau,
              bool    get_gradient,
-             bool    get_Mvz,
              int*    ZARR,
              int*    ZNORM,
              double* GT,
              double* GX,
              double* ZCOMPS,
-             double* GRAD,
-             double* ZEXP )
+             double* GRAD )
 {
     int     i, k;
     double  logk;
@@ -681,13 +612,11 @@ logmarglik ( int     nsnps,
     double* BZINV; //for each zstate BZ is a matrix of size I x I
     double* SZINV; //for each zstate S  is a matrix of size N x N
 
-    //printf ("%d zstates, %d SNPs and %d samples\n", zlen, nsnps, nsample);
-    //printf ("Size of double: %lu bytes\n", sizeof( double ));
-    //printf ("Size of float:  %lu bytes\n", sizeof( float ));
-    //printf ("Size required:  %f Gb\n", (double)((unsigned long)zlen * nsnps   * nsnps * sizeof(double)) / (1024 * 1024 * 1024));
+    //ProfilerStart("czcompgrad_from_c.prof");
+    printf("Entering C function\n");
     
-    BZINV = (double *)mkl_malloc( (unsigned long)zlen * nsnps   * nsnps   * sizeof( double ), 64 );
-    SZINV = (double *)mkl_malloc( (unsigned long)zlen * nsample * nsample * sizeof( double ), 64 );
+    BZINV = (double *)mkl_malloc( zlen * nsnps   * nsnps   * sizeof( double ), 64 );
+    SZINV = (double *)mkl_malloc( zlen * nsample * nsample * sizeof( double ), 64 );
     
     if (BZINV == NULL || SZINV == NULL) {
         printf( "C++ Error: Can't allocate memory for Bz / Sz. Aborting... \n");
@@ -695,7 +624,7 @@ logmarglik ( int     nsnps,
         mkl_free(SZINV);
         exit(0);
     }
-
+    
     get_zcomps ( nsnps, nsample, zlen, pi, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, ZCOMPS, BZINV, SZINV );
     
     logk = ZCOMPS[0];
@@ -716,16 +645,13 @@ logmarglik ( int     nsnps,
         
     if (get_gradient) {
 //      printf ("I have to calculate gradients \n");
-        get_grad ( nsnps, nsample, zlen, pi, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, ZCOMPS, BZINV, SZINV, GRAD );
+        get_grad ( nsnps, nsample, zlen, pi, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, ZCOMPS, BZINV, SZINV, GRAD);
     }
-
-    if (get_Mvz) {
-//      printf ("I have to calculate mean of the posterior distribution \n");
-        get_zexp ( nsnps, nsample, zlen, pi, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, BZINV, ZEXP );
-    }
-
+    
     mkl_free(BZINV);
     mkl_free(SZINV);
+
+    //ProfilerStop();
     
     return logmL;
 

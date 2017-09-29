@@ -82,5 +82,6 @@ def create(scaledparams, x, y, cmax, nvar, target):
 
 
             zstates += newk
+            posterior   = logmarglik.prob_comps(scaledparams, x, y, zstates)
 
     return zstates

@@ -3,10 +3,8 @@
 import numpy as np
 import random
 
-def simulate(pi = 0.1, mu = 0.0, sigma = 0.05, sigmabg = 0.001, tau = 200):
+def simulate(nsample, nsnps, pi = 0.1, mu = 0.0, sigma = 0.05, sigmabg = 0.001, tau = 200):
     # Simulate genotype =================
-    nsample = 300
-    nsnps = 200
     dosage = list()
     freq = list()
     for i in range(nsnps):

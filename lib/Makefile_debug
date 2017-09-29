@@ -1,0 +1,16 @@
+CC := gcc
+#LIBFLAGS := -I/usr/include/gperftools -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_ilp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread -lm -ldl -lprofiler -g -pg
+LIBFLAGS := -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_ilp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread -lm -ldl
+SHAREFLAGS := -O3 -shared -fPIC
+
+#trial: trial.o
+#	$(CC) $< $(LIBFLAGS) -o $@
+#trial.o: trial.cpp
+#	$(CC) -c $< -o $@
+#
+
+logmarglik.so: logmarglik.c
+	$(CC) $< $(LIBFLAGS) $(SHAREFLAGS) -o $@
+
+clean:
+	rm -rf logmarglik.so

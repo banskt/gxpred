@@ -13,3 +13,12 @@ class SnpInfo(collections.namedtuple('_SnpInfo', SNPINFO_FIELDS)):
 GENEINFO_FIELDS = ['name', 'ensembl_id', 'chrom', 'start', 'end']
 class GeneInfo(collections.namedtuple('_GeneInfo', GENEINFO_FIELDS)):
     __slots__ = ()
+
+
+class GeneExpressionArray(collections.namedtuple('_GeneExpressionArray', ['geneid', 'expr_arr'])):
+    __slots__ = ()
+
+
+ZSTATEINFO_FIELDS = ['state', 'prob', 'exp']
+class ZstateInfo(collections.namedtuple('_ZstateInfo', ZSTATEINFO_FIELDS)):
+    __slots__ = ()

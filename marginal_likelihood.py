@@ -28,14 +28,17 @@ def parse_args():
 
 opts = parse_args()
 
-pi = 0.01
+pi = 0.1
 mu = 0.0
 sigmabg = 0.001
-sigma = 0.1
+sigma = 0.01
 sigerr = 0.005
 tau = 1 / sigerr / sigerr
 
-x, y, csnps, v = model.simulate(pi = pi,
+nsample = 300
+nsnps = 200
+x, y, csnps, v = model.simulate(nsample, nsnps,
+                                pi = pi,
                                 mu = mu,
                                 sigma = sigma,
                                 sigmabg = sigmabg,
@@ -49,12 +52,18 @@ init_params = np.array(opts.params)
 #res[4] = np.sqrt(1 / res[4])
 #print('\n'.join(['{:g}'.format(x) for x in list(res)]))
 
-emp_bayes = EmpiricalBayes(x, y, 5, init_params, method="new")
+cmax = 2
+emp_bayes = EmpiricalBayes(x, y, 1, init_params, method="new")
 emp_bayes.fit()
 res = emp_bayes.params
-res[4] = np.sqrt(1 / res[4])
+#res[4] = np.sqrt(1 / res[4])
 print('\n'.join(['{:g}'.format(x) for x in list(res)]))
-
+if cmax > 1:
+    emp_bayes = EmpiricalBayes(x, y, cmax, init_params, method="new")
+    emp_bayes.fit()
+    res = emp_bayes.params
+    res[4] = np.sqrt(1 / res[4])
+    print('\n'.join(['{:g}'.format(x) for x in list(res)]))
 
 # ======================== OLD ===========================
 #zstates = [[]]

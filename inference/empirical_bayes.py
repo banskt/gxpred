@@ -42,13 +42,11 @@ class EmpiricalBayes:
         bounds = [[None, None] for i in range(5)]
         bounds[1] = [scaledparams[1], scaledparams[1]]
 
-        #args = self._genotype, self._phenotype
-        self._callback_zstates(scaledparams)
-        self._update_zstates = False
+        #self._callback_zstates(scaledparams)
+        #self._update_zstates = False
 
         lml_min = optimize.minimize(self._log_marginal_likelihood,
                                     scaledparams,
-                                    #args = args,
                                     method='L-BFGS-B',
                                     jac=True,
                                     bounds=bounds,
@@ -72,13 +70,9 @@ class EmpiricalBayes:
         if self._update_zstates:
             if   self._method == "old":
                 self._global_zstates = zs_old.create(scaledparams, self._genotype, self._phenotype, self._cmax, self._nsnps, self._ztarget)
+                print ("|OLD| {:d} zstates".format(len(self._global_zstates)))
             elif self._method == "new":
                 self._global_zstates =     zs.create(scaledparams, self._genotype, self._phenotype, self._cmax, self._nsnps, self._ztarget)
+                print ("|NEW| {:d} zstates".format(len(self._global_zstates)))
             elif self._method == "basic":
                 self._global_zstates = [[]] + [[i] for i in range(self._nsnps)]
-            #self._global_zstates = zs.create(scaledparams, 
-            #                                 self._genotype,
-            #                                 self._phenotype,
-            #                                 self._cmax,
-            #                                 self._nsnps,
-            #                                 self._ztarget)

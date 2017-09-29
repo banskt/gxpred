@@ -3,7 +3,7 @@
 import numpy as np
 import os
 import ctypes
-from inference import log_marginal_likelihood
+from inference import logmarglik as lml
 
 def prune(newz, prob, oldprobsum, target):
     
@@ -55,7 +55,7 @@ def create(scaledparams, x, y, cmax, nvar, target):
     newk = [[i] for i in range(nvar)]
 
     # Calculate the posterior probability of the zstates
-    posterior   = log_marginal_likelihood.prob_comps(scaledparams, x, y, oldk + newk)
+    posterior   = lml.prob_comps(scaledparams, x, y, zstates + newk)
     prob        = np.array(posterior[-len(newk):])
     old_prob    = np.array(posterior[:len(oldk)])
     probsum     = np.sum(prob)
@@ -104,7 +104,7 @@ def create(scaledparams, x, y, cmax, nvar, target):
             result     = np.array(newz[:newsize]).reshape((newstates, norm))
             newk       = [sorted(list(result[i])) for i in range(newstates)]
 
-            posterior   = log_marginal_likelihood.prob_comps(scaledparams, x, y, oldk + newk)
+            posterior   = lml.prob_comps(scaledparams, x, y, zstates + newk)
             prob        = np.array(posterior[-len(newk):])
             old_prob    = np.array(posterior[:len(oldk)])
             probsum     = np.sum(prob)
