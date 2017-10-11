@@ -28,8 +28,9 @@ class ReadVCF:
     _read_genotype_once = False
 
 
-    def __init__(self, filepath):
+    def __init__(self, filepath, mode="DS"):
         self._filepath = filepath
+        self._mode = mode
 
 
     @property
@@ -57,12 +58,6 @@ class ReadVCF:
         self._read_dosage()
 
 
-
-    ''' This is currently a mess.
-        I was testing different ways of reading the genotype to match the PrediXcan results
-        I learned PrediXcan uses VCF genotype -- GT field for input and DS field for output.
-        The function needs to be split into corresponding methods.
-    '''
     def _read_dosage(self):
         dosage = list()
         snpinfo = list()
@@ -81,24 +76,25 @@ class ReadVCF:
                     ref   = linesplit[3]
                     alt   = linesplit[4]
 
-                    dsindx = linesplit[8].split(':').index("DS")
-                    ds = [x.split(':')[dsindx] for x in linesplit[9:]]
-                    gtindx = linesplit[8].split(':').index("GT")
-                    for i, x in enumerate(ds):
-                        if x == ".":
-                            gt = linesplit[9+i].split(':')[gtindx]
-                            if len(gt) == 3 and gt[0] != "." and gt[2] != ".":
-                                ds[i] = int(gt[0]) + int(gt[2])
-                    #gtindx = linesplit[8].split(':').index("GT")
-                    #gt = [x.split(':')[gtindx] for x in linesplit[9:]]
-                    #ds = [ int(x[0]) + int(x[2]) if len(x) == 3 and x[0] != "." and x[2] != "." else "." for x in gt ]
+                    if self._mode == "DS":
+                        dsindx = linesplit[8].split(':').index("DS")
+                        ds = [x.split(':')[dsindx] for x in linesplit[9:]]
+                        gtindx = linesplit[8].split(':').index("GT")
+                        for i, x in enumerate(ds):
+                            if x == ".":
+                                gt = linesplit[9+i].split(':')[gtindx]
+                                if len(gt) == 3 and gt[0] != "." and gt[2] != ".":
+                                    ds[i] = float(int(gt[0]) + int(gt[2]))
+
+                    elif self._mode == "GT":
+                        gtindx = linesplit[8].split(':').index("GT")
+                        gt = [x.split(':')[gtindx] for x in linesplit[9:]]
+                        ds = [ float(int(x[0]) + int(x[2])) if len(x) == 3 and x[0] != "." and x[2] != "." else "." for x in gt ]
 
                     ds_notna = [float(x) for x in ds if x != "."]
-                    #freq = sum(ds_notna) / 2 / len(ds_notna)
-                    freq = sum(ds_notna) / len(ds_notna)
+                    freq = sum(ds_notna) / 2 / len(ds_notna)
                     maf = freq
-                    #snpdosage = [float(x) if x != '.' else 2 * maf for x in ds]
-                    snpdosage = [float(x) if x != '.' else maf for x in ds]
+                    snpdosage = [float(x) if x != '.' else 2 * freq for x in ds]
                     #if freq > 0.5:
                     #    maf = 1 - freq
                     #    ref = linesplit[4]

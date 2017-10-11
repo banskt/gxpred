@@ -11,7 +11,7 @@ def normalize(snps, gt):
 
 
 def remove_low_maf(snps, gt, maf):
-    qc_indices = [i for i, snp in enumerate(snps) if snp.maf >= maf]
+    qc_indices = [i for i, snp in enumerate(snps) if snp.maf >= maf and snp.maf <= (1.0 - maf)]
     newsnps = [snps[i] for i in qc_indices]
     newgt = gt[np.array(qc_indices), :]
     return newsnps, newgt
@@ -34,11 +34,10 @@ def prediction_variables(snps, subsnps, gt):
             elif snps[j].ref_allele == snp.alt_allele and snps[j].alt_allele == snp.ref_allele:
                 x = 2.0 - gt[j, :]
             else:
-                #x = np.array([f] * nsample)
-                x = np.zeros(nsample)
+                x = np.array([f] * nsample)
+                #x = np.zeros(nsample)
         else:
-            #x = np.array([f] * nsample)
-            x = np.zeros(nsample)
+            x = np.array([f] * nsample)
+            #x = np.zeros(nsample)
         newgt[i, :] = x
-        #newgt[i, :] = (x - (2 * f)) / np.sqrt(2 * f * (1 - f))
     return newgt

@@ -66,7 +66,7 @@ def parse_args():
 opts = parse_args()
 
 # Genotype
-vcf = ReadVCF(opts.vcfpath)
+vcf = ReadVCF(opts.vcfpath, mode="DS")
 genotype = vcf.dosage
 vcf_donors = vcf.donor_ids
 snps = vcf.snpinfo

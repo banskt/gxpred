@@ -73,7 +73,7 @@ def parse_args():
 opts = parse_args()
 
 # Genotype
-vcf = ReadVCF(opts.vcfpath)
+vcf = ReadVCF(opts.vcfpath, mode="DS")
 genotype = vcf.dosage
 vcf_donors = vcf.donor_ids
 snps = vcf.snpinfo
@@ -97,7 +97,7 @@ genes, indices = mfunc.select_genes(gene_info, gene_names)
 
 
 min_snps = 100
-pval_cutoff = 0.005
+pval_cutoff = 0.0005
 window = 1000000
 cmax = 2
 init_params = np.array(opts.params)
@@ -118,14 +118,14 @@ for i, gene in enumerate(genes[:3]):
         if len(cismask) > min_snps:
             assoc_model = LinRegAssociation(predictor, target, min_snps, pval_cutoff)
             pvalmask = cismask[assoc_model.selected_variables]
-            print ("Found {:d} SNPs, reduced to {:d} SNPs (min p-value {:g}) for {:s}".format(len(cismask), len(pvalmask), assoc_model.ordered_pvals[len(pvalmask) - 1], gene.name))
+            print ("Found {:d} SNPs, reduced to {:d} SNPs (max p-value {:g}) for {:s}".format(len(cismask), len(pvalmask), assoc_model.ordered_pvals[len(pvalmask) - 1], gene.name))
             predictor = gt[pvalmask][:, vcfmask]
             snpmask = pvalmask
         else:
             print ("Found {:d} SNPs for {:s}".format(len(cismask), gene.name))
 
         # perform the analysis
-        emp_bayes = EmpiricalBayes(predictor, target, 1, init_params, method="new")
+        emp_bayes = EmpiricalBayes(predictor, target, 1, init_params, method="old")
         emp_bayes.fit()
         res = emp_bayes.params
         if cmax > 1:

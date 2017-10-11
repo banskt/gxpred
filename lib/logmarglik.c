@@ -179,7 +179,7 @@ mat_trace ( int n, double* A )
  * =====================================================================================
  */
     double
-logdet_inverse_of_mat ( int n, double* A )
+logdet_inverse_of_mat ( int n, double* A, double tau, double sigmabg2 )
 {
     int i, j;
     int info;
@@ -188,7 +188,12 @@ logdet_inverse_of_mat ( int n, double* A )
 //  Cholesky factorization of a symmetric (Hermitian) positive-definite matrix
     info = LAPACKE_dpotrf (LAPACK_ROW_MAJOR, 'L', n , A, n);
     if ( info != 0 ) {
-        printf ("C++ Error: Cholesky factorization failed. Aborting... \n");
+        printf ("C++ Error: Cholesky factorization failed with errorcode %d. Aborting... \n", info);
+        //for (i = 0; i < n * n ; i++) {
+        //    printf ("%f ", A[i]);
+        //}
+        //printf ("\n");
+        printf ("Tau: %g, Sigmabg2: %g\n", tau, sigmabg2);
         exit(0);
     }
 
@@ -320,7 +325,8 @@ get_zcomps ( int nsnps, int nsample, int zlen,
     for (i = 0; i < nsnps; i++) {
         B_INV[ i*nsnps + i ] += 1 / sigmabg2;
     }
-    logB0det = logdet_inverse_of_mat(nsnps, B_INV);
+    logB0det = logdet_inverse_of_mat(nsnps, B_INV, tau, sigmabg2);
+    printf ("Inverted with sigmabg2 %g\n", sigmabg2);
     for (i = 0; i < (nsnps*nsnps); i++) {
         BZINV[i] = B_INV[i];
     }

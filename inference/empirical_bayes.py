@@ -41,8 +41,9 @@ class EmpiricalBayes:
 
         bounds = [[None, None] for i in range(5)]
         bounds[1] = [scaledparams[1], scaledparams[1]]
+        #bounds[3] = [-10, -4]
 
-        #self._callback_zstates(scaledparams)
+        self._callback_zstates(scaledparams)
         #self._update_zstates = False
 
         lml_min = optimize.minimize(self._log_marginal_likelihood,
@@ -61,8 +62,14 @@ class EmpiricalBayes:
 
 
     def _log_marginal_likelihood(self, scaledparams):
-        self._callback_zstates(self._params)
+        #self._callback_zstates(self._params)
+        #print ("Scaled parameters:")
+        print (scaledparams)
+        #print ("Descaled parameters:")
+        #print (hyperparameters.descale(scaledparams))
+        #print ("Sigmabg2: ", np.square(hyperparameters.descale(scaledparams)[3]))
         lml, der = logmarglik.func_grad(scaledparams, self._genotype, self._phenotype, self._global_zstates)
+        print (der)
         return lml, der
 
 
