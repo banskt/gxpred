@@ -193,7 +193,7 @@ logdet_inverse_of_mat ( int n, double* A, double tau, double sigmabg2 )
         //    printf ("%f ", A[i]);
         //}
         //printf ("\n");
-        printf ("Tau: %g, Sigmabg2: %g\n", tau, sigmabg2);
+        //printf ("Tau: %g, Sigmabg2: %g\n", tau, sigmabg2);
         exit(0);
     }
 
@@ -265,7 +265,7 @@ get_zcomps ( int nsnps, int nsample, int zlen,
              double pi, double mu, double sigma, double sigmabg, double tau,
              int* ZARR, int* ZNORM, 
              double* GT, double* GX,
-             double* ZCOMPS, double* BZINV, double* SZINV )
+             double* ZCOMPS, double* BZINV, double* SZINV, bool debug )
 {
     int     i, j, k, z;
     int     nz, zindx, zpos;
@@ -306,6 +306,10 @@ get_zcomps ( int nsnps, int nsample, int zlen,
         mkl_free(DUM3);
         mkl_free(DUM4);
         exit(0);
+    } else {
+        if (debug) {
+            printf ( "Succesfully allocated memories for internal ZCOMPS.\n" );
+        }
     }
 
     sigma2 = sigma * sigma;
@@ -320,19 +324,23 @@ get_zcomps ( int nsnps, int nsample, int zlen,
         S_INV[i] = 0.0;
     }
 
+    if (debug) {
+        printf ( "BINV and SINV updated.\n" );
+    }
+
 
     a_mat_matT(nsnps, nsample, tau, GT, B_INV);
     for (i = 0; i < nsnps; i++) {
         B_INV[ i*nsnps + i ] += 1 / sigmabg2;
     }
     logB0det = logdet_inverse_of_mat(nsnps, B_INV, tau, sigmabg2);
-    printf ("Inverted with sigmabg2 %g\n", sigmabg2);
     for (i = 0; i < (nsnps*nsnps); i++) {
         BZINV[i] = B_INV[i];
     }
 
     zindx = 0;
     for (z = 0; z < zlen; z++) {
+  
         nz = ZNORM[z];
         
         for (i = 0; i < (nsnps*nsnps); i++) {
@@ -368,13 +376,13 @@ get_zcomps ( int nsnps, int nsample, int zlen,
         log_normz = - 0.5 * (logSZdet + (nsample * log(2 * _PI)) + nterm);
         
         ZCOMPS[z] = log_probz + log_normz;
-        //ZCOMPS[z] = GX[0];
-        
+
         for (i = 0; i < (nsnps*nsnps); i++) {
-            BZINV[ z*nsnps*nsnps + i ] = B_INV[i];
+            BZINV[ (unsigned long)z*nsnps*nsnps + i ] = B_INV[i];
         }
+
         for (i = 0; i < (nsample*nsample); i++) {
-            SZINV[ z*nsample*nsample + i ] = S_INV[i];
+            SZINV[ (unsigned long)z*nsample*nsample + i ] = S_INV[i];
         }
         
         zindx += nz;
@@ -460,7 +468,7 @@ get_grad ( int nsnps, int nsample, int zlen,
         exit(0);
     }
     else {
-//        printf ("Successfully allocated memories \n");
+//        printf ("Successfully allocated memories for gradient calculation.\n");
     }
 
 
@@ -483,13 +491,13 @@ get_grad ( int nsnps, int nsample, int zlen,
 
 
         for ( i = 0; i < (nsnps*nsnps); i++ ) {
-            B_INV[i] = BZINV[ z*nsnps*nsnps + i ];
+            B_INV[i] = BZINV[ (unsigned long)z*nsnps*nsnps + i ];
             DBINV_DSIGMA[i] = 0.0;
             DBINV_DSIGMABG[i] = 0.0;
         }
         a_mat_matT ( nsnps, nsnps, ( 2.0 / sigmabg3 ), B_INV, DBINV_DSIGMABG );
         for ( i = 0; i < (nsample*nsample); i++ ) {
-            S_INV[i] = SZINV[ z*nsample*nsample + i ];
+            S_INV[i] = SZINV[ (unsigned long)z*nsample*nsample + i ];
             DSINV_DSIGMA[i] = 0.0;
             DSINV_DSIGMABG[i] = 0.0;
             DSINV_DTAU[i] = 0.0;
@@ -633,7 +641,7 @@ get_zexp ( int nsnps, int nsample, int zlen,
             FACTZ[zpos] += (mu / sigma2) - (mu / sigmabg2);
         }
         for (i = 0; i < (nsnps*nsnps); i++) {
-            S_VZ_[i] = BZINV[ z*nsnps*nsnps + i ];
+            S_VZ_[i] = BZINV[ (unsigned long)z*nsnps*nsnps + i ];
         }
         smat_vec ( nsnps, S_VZ_, FACTZ, M_VZ_ );
 
@@ -687,10 +695,19 @@ logmarglik ( int     nsnps,
     double* BZINV; //for each zstate BZ is a matrix of size I x I
     double* SZINV; //for each zstate S  is a matrix of size N x N
 
-    //printf ("%d zstates, %d SNPs and %d samples\n", zlen, nsnps, nsample);
-    //printf ("Size of double: %lu bytes\n", sizeof( double ));
-    //printf ("Size of float:  %lu bytes\n", sizeof( float ));
-    //printf ("Size required:  %f Gb\n", (double)((unsigned long)zlen * nsnps   * nsnps * sizeof(double)) / (1024 * 1024 * 1024));
+    bool debug;
+
+    debug = false;
+    /*if (zlen > 10000) {
+        debug = true;
+    }*/
+
+    if (debug) {
+        printf ("%d zstates, %d SNPs and %d samples\n", zlen, nsnps, nsample);
+        printf ("Size of double: %lu bytes\n", sizeof( double ));
+        printf ("Size of float:  %lu bytes\n", sizeof( float ));
+        printf ("Size required:  %f Gb\n", (double)((unsigned long)zlen * nsnps   * nsnps * sizeof(double)) / (1024 * 1024 * 1024));
+    }
     
     BZINV = (double *)mkl_malloc( (unsigned long)zlen * nsnps   * nsnps   * sizeof( double ), 64 );
     SZINV = (double *)mkl_malloc( (unsigned long)zlen * nsample * nsample * sizeof( double ), 64 );
@@ -700,9 +717,16 @@ logmarglik ( int     nsnps,
         mkl_free(BZINV);
         mkl_free(SZINV);
         exit(0);
+    } else {
+        if (debug) {
+            printf( "Memory allocation succesful before ZCOMPS.\n" );
+        }
     }
 
-    get_zcomps ( nsnps, nsample, zlen, pi, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, ZCOMPS, BZINV, SZINV );
+    get_zcomps ( nsnps, nsample, zlen, pi, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, ZCOMPS, BZINV, SZINV, debug );
+    if (debug) {
+        printf ( "ZCOMPS calculated.\n" );
+    }
     
     logk = ZCOMPS[0];
     for ( i=1; i < zlen; i++ ) {
@@ -721,12 +745,10 @@ logmarglik ( int     nsnps,
     }
         
     if (get_gradient) {
-//      printf ("I have to calculate gradients \n");
         get_grad ( nsnps, nsample, zlen, pi, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, ZCOMPS, BZINV, SZINV, GRAD );
     }
 
     if (get_Mvz) {
-//      printf ("I have to calculate mean of the posterior distribution \n");
         get_zexp ( nsnps, nsample, zlen, pi, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, BZINV, ZEXP );
     }
 

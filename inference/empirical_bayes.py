@@ -40,7 +40,7 @@ class EmpiricalBayes:
         scaledparams = self._params
 
         bounds = [[None, None] for i in range(5)]
-        bounds[1] = [scaledparams[1], scaledparams[1]]
+        #bounds[1] = [scaledparams[1], scaledparams[1]]
         #bounds[3] = [-10, -4]
 
         self._callback_zstates(scaledparams)
@@ -62,14 +62,16 @@ class EmpiricalBayes:
 
 
     def _log_marginal_likelihood(self, scaledparams):
-        #self._callback_zstates(self._params)
-        #print ("Scaled parameters:")
-        print (scaledparams)
-        #print ("Descaled parameters:")
-        #print (hyperparameters.descale(scaledparams))
-        #print ("Sigmabg2: ", np.square(hyperparameters.descale(scaledparams)[3]))
-        lml, der = logmarglik.func_grad(scaledparams, self._genotype, self._phenotype, self._global_zstates)
-        print (der)
+        if (scaledparams[0] < -50 or scaledparams[2] > 10 or scaledparams[3] > 10):
+            print ("Correcting scaledparams and derivatives")
+            print (scaledparams)
+            lml = self._lml
+            der = self._der
+            print (der)
+        else:
+            lml, der = logmarglik.func_grad(scaledparams, self._genotype, self._phenotype, self._global_zstates)
+            self._lml = lml
+            self._der = der
         return lml, der
 
 
@@ -77,9 +79,10 @@ class EmpiricalBayes:
         if self._update_zstates:
             if   self._method == "old":
                 self._global_zstates = zs_old.create(scaledparams, self._genotype, self._phenotype, self._cmax, self._nsnps, self._ztarget)
-                print ("|OLD| {:d} zstates".format(len(self._global_zstates)))
+                #print ("|OLD| {:d} zstates".format(len(self._global_zstates)))
             elif self._method == "new":
+                #print ("|NEW| Creating zstates.")
                 self._global_zstates =     zs.create(scaledparams, self._genotype, self._phenotype, self._cmax, self._nsnps, self._ztarget)
-                print ("|NEW| {:d} zstates".format(len(self._global_zstates)))
+                #print ("|NEW| {:d} zstates".format(len(self._global_zstates)))
             elif self._method == "basic":
                 self._global_zstates = [[]] + [[i] for i in range(self._nsnps)]

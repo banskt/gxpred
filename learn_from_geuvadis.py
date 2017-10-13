@@ -15,6 +15,8 @@ from utils import gtutils
 from utils import mfunc
 from utils.containers import ZstateInfo
 
+from sklearn.preprocessing import scale
+
 def parse_args():
 
     parser = argparse.ArgumentParser(description='Bayesian model for learning genetic contribution in gene expression')
@@ -97,20 +99,21 @@ genes, indices = mfunc.select_genes(gene_info, gene_names)
 
 
 min_snps = 100
-pval_cutoff = 0.0005
+pval_cutoff = 0.001
 window = 1000000
 cmax = 2
 init_params = np.array(opts.params)
 
 model = IOModel(opts.outdir, opts.chrom)
 
-for i, gene in enumerate(genes[:3]):
+for i, gene in enumerate(genes):
     k = indices[i]
 
     # select only the cis-SNPs
     cismask = mfunc.select_snps(gene, snps, window)
     if len(cismask) > 0:
         target = expression[k, exprmask]
+        target = scale(target, with_mean=True, with_std=True)
         predictor = gt[cismask][:, vcfmask]
         snpmask = cismask
 
@@ -125,7 +128,7 @@ for i, gene in enumerate(genes[:3]):
             print ("Found {:d} SNPs for {:s}".format(len(cismask), gene.name))
 
         # perform the analysis
-        emp_bayes = EmpiricalBayes(predictor, target, 1, init_params, method="old")
+        emp_bayes = EmpiricalBayes(predictor, target, 1, init_params, method="new")
         emp_bayes.fit()
         res = emp_bayes.params
         if cmax > 1:

@@ -95,5 +95,3 @@ for gene in genes:
 
 # Write output
 mfunc.write_gcta_phenotype(opts.outfileprefix, vcf_donors, gx)
-    
-print ("All done")
