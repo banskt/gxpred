@@ -150,5 +150,3 @@ for i, gene in enumerate(genes):
 
     else:
         print("No genotype for gene {:s}".format(gene.name))
-
-print ("All done")
