@@ -12,3 +12,11 @@ __pycache__/
 
 # my own gvim IDE
 .vimrc
+
+# my own input files
+# dev_training/data/input
+dev_training/data/
+predictdb_data/
+
+# R history
+.Rhistory
