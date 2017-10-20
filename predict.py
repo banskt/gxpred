@@ -5,7 +5,7 @@ import numpy as np
 
 from iotools.readvcf import ReadVCF
 from iotools.readrpkm import ReadRPKM
-from iotools.io_model import IOModel
+from iotools.io_model import ReadModel
 from utils.containers import GeneExpressionArray
 from utils import mfunc
 from utils import gtutils
@@ -58,7 +58,7 @@ snps = vcf.snpinfo
 nsample = len(vcf_donors)
 
 # Model
-model = IOModel(opts.modelpath, opts.chrom)
+model = ReadModel(opts.modelpath, opts.chrom)
 genes = model.genes
 
 # Prediction

@@ -5,7 +5,7 @@ import numpy as np
 
 from iotools.readvcf import ReadVCF
 from iotools.readrpkm import ReadRPKM
-from iotools.io_model import IOModel
+from iotools.io_model import WriteModel
 from inference.linreg_association import LinRegAssociation
 from inference.empirical_bayes import EmpiricalBayes
 from utils import hyperparameters
@@ -28,7 +28,7 @@ def parse_args():
                         help='input genotype file in vcf.gz format')
 
 
-    parser.add_argument('--rpkm',
+    parser.add_argument('--expr',
                         type=str,
                         dest='rpkmpath',
                         metavar='FILE',
@@ -41,7 +41,7 @@ def parse_args():
                         metavar='FILE',
                         help='Gene Annotation file')
 
-    parser.add_argument('--chrom',
+    parser.add_argument('--chr',
                         #nargs='*',
                         type=int,
                         dest='chrom',
@@ -56,7 +56,7 @@ def parse_args():
                         metavar='FLOAT',
                         help='initialization parameters [pi, mu, sigma, sigma_bg, sigma_tau]')
 
-    parser.add_argument('--outdir',
+    parser.add_argument('--out',
                         type=str,
                         dest='outdir',
                         metavar='DIR',
@@ -98,15 +98,16 @@ vcfmask, exprmask = mfunc.select_donors(vcf_donors, expr_donors)
 genes, indices = mfunc.select_genes(gene_info, gene_names)
 
 
-min_snps = 100
+min_snps = 200
 pval_cutoff = 0.001
 window = 1000000
 cmax = 2
 init_params = np.array(opts.params)
+init_params[4] = 1 / init_params[4] / init_params[4]
 
-model = IOModel(opts.outdir, opts.chrom)
+model = WriteModel(opts.outdir, opts.chrom)
 
-for i, gene in enumerate(genes):
+for i, gene in enumerate(genes[54:]):
     k = indices[i]
 
     # select only the cis-SNPs
@@ -128,25 +129,37 @@ for i, gene in enumerate(genes):
             print ("Found {:d} SNPs for {:s}".format(len(cismask), gene.name))
 
         # perform the analysis
+        print ("Starting first optimization ==============")
         emp_bayes = EmpiricalBayes(predictor, target, 1, init_params, method="new")
         emp_bayes.fit()
-        res = emp_bayes.params
         if cmax > 1:
+            if emp_bayes.success:
+                res = emp_bayes.params
+                print ("Starting second optimization from previous results ================")
+            else:
+                res = init_params
+                print ("Starting second optimization from initial parameters ================")
             emp_bayes = EmpiricalBayes(predictor, target, cmax, res, method="new")
             emp_bayes.fit()
+            
+
+        if emp_bayes.success:
             res = emp_bayes.params
+            res[4] = 1 / np.sqrt(res[4])
             print('\n'.join(['{:g}'.format(x) for x in list(res)]))
 
-        model_snps = [snps[x] for x in snpmask]
-        model_zstates = list()
-        scaledparams = hyperparameters.scale(emp_bayes.params)
-        zprob, zexp = logmarglik.model_exp(scaledparams, predictor, target, emp_bayes.zstates)
-        for j, z in enumerate(emp_bayes.zstates):
-            this_zstate = ZstateInfo(state = z,
-                                     prob  = zprob[j],
-                                     exp   = list(zexp[j, :]) )
-            model_zstates.append(this_zstate)
-        model.write_gene(gene, model_snps, model_zstates)
-
+            model_snps = [snps[x] for x in snpmask]
+            model_zstates = list()
+            scaledparams = hyperparameters.scale(emp_bayes.params)
+            zprob, zexp = logmarglik.model_exp(scaledparams, predictor, target, emp_bayes.zstates)
+            for j, z in enumerate(emp_bayes.zstates):
+                this_zstate = ZstateInfo(state = z,
+                                         prob  = zprob[j],
+                                         exp   = list(zexp[j, :]) )
+                model_zstates.append(this_zstate)
+            model.write_success_gene(gene, model_snps, model_zstates, res)
+        else:
+            model.write_failed_gene(gene, np.zeros_like(init_params))
+            print ("Failed optimization")
     else:
         print("No genotype for gene {:s}".format(gene.name))

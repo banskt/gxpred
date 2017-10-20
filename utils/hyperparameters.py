@@ -12,7 +12,7 @@ def scale(params):
     return scaledparams
     
 def descale(scaledparams):
-    pi = 1 / (1 + np.exp(-scaledparams[0]))
+    pi = np.exp(scaledparams[0]) / (1 + np.exp(scaledparams[0]))
     mu = scaledparams[1] / 100
     sigma = np.exp(scaledparams[2])
     sigmabg = np.exp(scaledparams[3])

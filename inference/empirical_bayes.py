@@ -36,12 +36,19 @@ class EmpiricalBayes:
         return self._global_zstates
 
 
+    @property
+    def success(self):
+        return self._success
+
+
     def fit(self):
         scaledparams = self._params
 
         bounds = [[None, None] for i in range(5)]
-        #bounds[1] = [scaledparams[1], scaledparams[1]]
-        #bounds[3] = [-10, -4]
+        bounds[1] = [scaledparams[1], scaledparams[1]]
+        bounds[2] = [None, 2]
+        bounds[3] = [None, 2]
+        bounds[4] = [None, 20]
 
         self._callback_zstates(scaledparams)
         #self._update_zstates = False
@@ -58,20 +65,20 @@ class EmpiricalBayes:
                                              'gtol': 1e-9,
                                              'disp': True})
         self._params = lml_min.x
+        self._success = lml_min.success
         print(lml_min)
 
 
     def _log_marginal_likelihood(self, scaledparams):
-        if (scaledparams[0] < -50 or scaledparams[2] > 10 or scaledparams[3] > 10):
-            print ("Correcting scaledparams and derivatives")
-            print (scaledparams)
-            lml = self._lml
-            der = self._der
-            print (der)
-        else:
-            lml, der = logmarglik.func_grad(scaledparams, self._genotype, self._phenotype, self._global_zstates)
-            self._lml = lml
-            self._der = der
+        #if (scaledparams[0] < -500 or scaledparams[2] > 1 or scaledparams[3] > 1 or scaledparams[4] > 10):
+        #    print ("Correcting scaledparams and derivatives")
+        #    print (scaledparams)
+        #    lml = self._lml
+        #    der = self._der
+        #else:
+        lml, der = logmarglik.func_grad(scaledparams, self._genotype, self._phenotype, self._global_zstates)
+        self._lml = lml
+        self._der = der
         return lml, der
 
 
