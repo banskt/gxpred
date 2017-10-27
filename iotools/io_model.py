@@ -36,8 +36,8 @@ class WriteModel:
         self._ZSTATEFILEFORMAT = "{:s}_zstates.txt"
         if not os.path.exists(self._dirpath):
             os.makedirs(self._dirpath)
-        #with open(self._genefilename, 'w') as mfile:
-        #    mfile.write("{:25s}\t{:25s}\t{:7s}\t{:8s}\t{:8s}\t{:8s}\t{:8s}\t{:s}\n".format("Ensembl_ID", "Gene_Name", "Success", "Pi", "Mu", "Sigma", "Sigma_bg", "Sigma_tau"))
+        with open(self._genefilename, 'w') as mfile:
+            mfile.write("{:25s}\t{:25s}\t{:7s}\t{:8s}\t{:8s}\t{:8s}\t{:8s}\t{:s}\n".format("Ensembl_ID", "Gene_Name", "Success", "Pi", "Mu", "Sigma", "Sigma_bg", "Sigma_tau"))
         
 
     def snpfilename(self):

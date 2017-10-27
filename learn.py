@@ -107,7 +107,7 @@ init_params[4] = 1 / init_params[4] / init_params[4]
 
 model = WriteModel(opts.outdir, opts.chrom)
 
-for i, gene in enumerate(genes[54:]):
+for i, gene in enumerate(genes):
     k = indices[i]
 
     # select only the cis-SNPs
@@ -129,6 +129,7 @@ for i, gene in enumerate(genes[54:]):
             print ("Found {:d} SNPs for {:s}".format(len(cismask), gene.name))
 
         # perform the analysis
+        
         print ("Starting first optimization ==============")
         emp_bayes = EmpiricalBayes(predictor, target, 1, init_params, method="new")
         emp_bayes.fit()

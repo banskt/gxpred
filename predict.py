@@ -31,13 +31,13 @@ def parse_args():
                         metavar='DIR',
                         help='input directory of the trained model')
 
-    parser.add_argument('--chrom',
+    parser.add_argument('--chr',
                         type=int,
                         dest='chrom',
                         metavar='CHR',
                         help='predict egenes from this chromosome only')
 
-    parser.add_argument('--outprefix',
+    parser.add_argument('--out',
                         type=str,
                         dest='outfileprefix',
                         metavar='FILE',

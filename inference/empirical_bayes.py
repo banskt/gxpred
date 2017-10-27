@@ -8,6 +8,9 @@ from inference import logmarglik
 from inference import zstates_old_method as zs_old
 from inference import zstates as zs
 
+class CostFunctionNumericalError(Exception):
+    pass
+
 class EmpiricalBayes:
 
     _global_zstates = list()
@@ -46,39 +49,35 @@ class EmpiricalBayes:
 
         bounds = [[None, None] for i in range(5)]
         bounds[1] = [scaledparams[1], scaledparams[1]]
-        bounds[2] = [None, 2]
-        bounds[3] = [None, 2]
-        bounds[4] = [None, 20]
+        #bounds[2] = [None, 2]
+        #bounds[3] = [None, 2]
+        #bounds[4] = [None, 20]
 
         self._callback_zstates(scaledparams)
-        #self._update_zstates = False
 
-        lml_min = optimize.minimize(self._log_marginal_likelihood,
-                                    scaledparams,
-                                    method='L-BFGS-B',
-                                    jac=True,
-                                    bounds=bounds,
-                                    callback=self._callback_zstates,
-                                    options={'maxiter': 200000,
-                                             'maxfun': 2000000,
-                                             'ftol': 1e-9,
-                                             'gtol': 1e-9,
-                                             'disp': True})
-        self._params = lml_min.x
-        self._success = lml_min.success
-        print(lml_min)
+        try:
+            lml_min = optimize.minimize(self._log_marginal_likelihood,
+                                        scaledparams,
+                                        method='L-BFGS-B',
+                                        jac=True,
+                                        bounds=bounds,
+                                        callback=self._callback_zstates,
+                                        options={'maxiter': 200000,
+                                                 'maxfun': 2000000,
+                                                 'ftol': 1e-9,
+                                                 'gtol': 1e-9,
+                                                 'disp': True})
+            self._params = lml_min.x
+            self._success = lml_min.success
+            print(lml_min)
+        except CostFunctionNumericalError:
+            self._success = False
 
 
     def _log_marginal_likelihood(self, scaledparams):
-        #if (scaledparams[0] < -500 or scaledparams[2] > 1 or scaledparams[3] > 1 or scaledparams[4] > 10):
-        #    print ("Correcting scaledparams and derivatives")
-        #    print (scaledparams)
-        #    lml = self._lml
-        #    der = self._der
-        #else:
-        lml, der = logmarglik.func_grad(scaledparams, self._genotype, self._phenotype, self._global_zstates)
-        self._lml = lml
-        self._der = der
+        success, lml, der = logmarglik.func_grad(scaledparams, self._genotype, self._phenotype, self._global_zstates)
+        if not success:
+            raise CostFunctionNumericalError()
         return lml, der
 
 
@@ -86,10 +85,7 @@ class EmpiricalBayes:
         if self._update_zstates:
             if   self._method == "old":
                 self._global_zstates = zs_old.create(scaledparams, self._genotype, self._phenotype, self._cmax, self._nsnps, self._ztarget)
-                #print ("|OLD| {:d} zstates".format(len(self._global_zstates)))
             elif self._method == "new":
-                #print ("|NEW| Creating zstates.")
                 self._global_zstates =     zs.create(scaledparams, self._genotype, self._phenotype, self._cmax, self._nsnps, self._ztarget)
-                #print ("|NEW| {:d} zstates".format(len(self._global_zstates)))
             elif self._method == "basic":
                 self._global_zstates = [[]] + [[i] for i in range(self._nsnps)]

@@ -7,8 +7,9 @@
  *
  *        Version:  1.0
  *        Created:  22/07/17 11:36:53
- *       Revision:  none
- *       Compiler:  gcc
+ *       Revision:  1.1
+ *     Revised on:  27/10/17
+ *       Compiler:  icc / gcc
  *
  *         Author:  Saikat Banerjee (banskt), bnrj.saikat@gmail.com
  *   Organization:  Max Planck Institute for Biophysical Chemistry
@@ -164,6 +165,7 @@ mat_trace ( int n, double* A )
     for ( i = 0; i < n; i++ ) {
         trace += A[ i*n+i ];
     }
+
     return trace;
 
 }		/* -----  end of function mat_trace  ----- */
@@ -178,45 +180,42 @@ mat_trace ( int n, double* A )
  *                logdet is returned as result.
  * =====================================================================================
  */
-    double
-logdet_inverse_of_mat ( int n, double* A, double tau, double sigmabg2 )
+    bool
+logdet_inverse_of_mat ( int n, double* A, double tau, double sigmabg2, double* logdet )
 {
     int i, j;
-    int info;
-    double logdet;
+    int info = 1;
 
-//  Cholesky factorization of a symmetric (Hermitian) positive-definite matrix
+    // Cholesky factorization of a symmetric (Hermitian) positive-definite matrix
     info = LAPACKE_dpotrf (LAPACK_ROW_MAJOR, 'L', n , A, n);
+
     if ( info != 0 ) {
-        printf ("C++ Error: Cholesky factorization failed with errorcode %d. Aborting... \n", info);
-        //for (i = 0; i < n * n ; i++) {
-        //    printf ("%f ", A[i]);
-        //}
-        //printf ("\n");
-        //printf ("Tau: %g, Sigmabg2: %g\n", tau, sigmabg2);
-        exit(0);
+        printf ("C Error: Cholesky factorization failed with errorcode %d.\n", info);
+        *logdet = 0.0;
+	return false;
     }
 
-    logdet = 0.0;
+    *logdet = 0.0;
     for (i = 0; i < n; i++) {
-        logdet += 2 * log(A[ i*n+i ]);
+        *logdet += 2 * log(A[ i*n+i ]);
     }
 
-//  inverse of a symmetric (Hermitian) positive-definite matrix using the Cholesky factorization.
+    // inverse of a symmetric (Hermitian) positive-definite matrix using the Cholesky factorization.
     info = LAPACKE_dpotri (LAPACK_ROW_MAJOR, 'L', n, A, n);
-    if(info != 0) {
-        printf ("C++ Error: Matrix inversion failed. Aborting... \n");
-        exit(0);
-    } else {
-//      overwrite the upper half
-        for (i = 0; i < n; i++) {
-            for (j = i+1; j < n; j++) {
-                A[ i*n+j ] = A[ j*n+i ];
-            }
+
+    if (info != 0) {
+	printf ("C Error: Matrix inversion failed.\n");
+        return false;
+    }
+
+    // succesful inversion. overwrite the upper half
+    for (i = 0; i < n; i++) {
+        for (j = i+1; j < n; j++) {
+	    A[ i*n+j ] = A[ j*n+i ];
         }
     }
 
-    return logdet;
+    return true;
 }		/* -----  end of function logdet_inverse_of_mat  ----- */
 
 
@@ -260,7 +259,7 @@ binv_update ( int nsnps, int zpos, double mod, double* B, double* Drow, double* 
  *                zcomps = log(Pz) + log(Nz)
  * =====================================================================================
  */
-    void
+    bool
 get_zcomps ( int nsnps, int nsample, int zlen, 
              double pi, double mu, double sigma, double sigmabg, double tau,
              int* ZARR, int* ZNORM, 
@@ -280,6 +279,7 @@ get_zcomps ( int nsnps, int nsample, int zlen,
     double  mod_denom, mod;
     double  log_probz;
     double  log_normz;
+    bool    success;
 
     double* B_INV;
     double* S_INV;
@@ -288,28 +288,28 @@ get_zcomps ( int nsnps, int nsample, int zlen,
     double  *DUM1, *DUM2, *DUM3, *DUM4;
 
     B_INV = (double *)mkl_malloc( nsnps   * nsnps   * sizeof( double ), 64 );
+    if (B_INV == NULL) {success = false; goto cleanup_zcomps_B_INV;}
+
     S_INV = (double *)mkl_malloc( nsample * nsample * sizeof( double ), 64 );
+    if (S_INV == NULL) {success = false; goto cleanup_zcomps_S_INV;}
+
     GX_MZ = (double *)mkl_malloc(           nsample * sizeof( double ), 64 );
+    if (GX_MZ == NULL) {success = false; goto cleanup_zcomps_GX_MZ;}
+
     DUM1  = (double *)mkl_malloc(           nsnps   * sizeof( double ), 64 );
+    if (DUM1 == NULL)  {success = false; goto cleanup_zcomps_DUM1;}
+
     DUM2  = (double *)mkl_malloc(           nsnps   * sizeof( double ), 64 );
+    if (DUM2 == NULL)  {success = false; goto cleanup_zcomps_DUM2;}
+
     DUM3  = (double *)mkl_malloc( nsnps   * nsample * sizeof( double ), 64 );
+    if (DUM3 == NULL)  {success = false; goto cleanup_zcomps_DUM3;}
+
     DUM4  = (double *)mkl_malloc(           nsample * sizeof( double ), 64 );
+    if (DUM4 == NULL)  {success = false; goto cleanup_zcomps_DUM4;}
 
-
-    if (B_INV == NULL || S_INV == NULL || GX_MZ == NULL || DUM1 == NULL || DUM2 == NULL || DUM3 == NULL || DUM4 == NULL) {
-        printf( "C++ Error: Can't allocate memory for z-specific Bz / Sz. Aborting... \n");
-        mkl_free(B_INV);
-        mkl_free(S_INV);
-        mkl_free(GX_MZ);
-        mkl_free(DUM1);
-        mkl_free(DUM2);
-        mkl_free(DUM3);
-        mkl_free(DUM4);
-        exit(0);
-    } else {
-        if (debug) {
-            printf ( "Succesfully allocated memories for internal ZCOMPS.\n" );
-        }
+    if (debug) {
+        printf ( "Succesfully allocated memories for internal ZCOMPS.\n" );
     }
 
     sigma2 = sigma * sigma;
@@ -323,7 +323,6 @@ get_zcomps ( int nsnps, int nsample, int zlen,
     for (i = 0; i < (nsample*nsample); i++) {
         S_INV[i] = 0.0;
     }
-
     if (debug) {
         printf ( "BINV and SINV updated.\n" );
     }
@@ -333,7 +332,13 @@ get_zcomps ( int nsnps, int nsample, int zlen,
     for (i = 0; i < nsnps; i++) {
         B_INV[ i*nsnps + i ] += 1 / sigmabg2;
     }
-    logB0det = logdet_inverse_of_mat(nsnps, B_INV, tau, sigmabg2);
+
+    success = logdet_inverse_of_mat(nsnps, B_INV, tau, sigmabg2, &logB0det);
+
+    if (success == false) {
+	goto cleanup_zcomps;
+    }
+
     for (i = 0; i < (nsnps*nsnps); i++) {
         BZINV[i] = B_INV[i];
     }
@@ -389,14 +394,29 @@ get_zcomps ( int nsnps, int nsample, int zlen,
     
     }
 
-    mkl_free(B_INV);
-    mkl_free(S_INV);
-    mkl_free(GX_MZ);
-    mkl_free(DUM1);
-    mkl_free(DUM2);
-    mkl_free(DUM3);
+cleanup_zcomps:
+cleanup_zcomps_DUM4:
     mkl_free(DUM4);
 
+cleanup_zcomps_DUM3:
+    mkl_free(DUM3);
+
+cleanup_zcomps_DUM2:
+    mkl_free(DUM2);
+
+cleanup_zcomps_DUM1:
+    mkl_free(DUM1);
+
+cleanup_zcomps_GX_MZ:
+    mkl_free(GX_MZ);
+
+cleanup_zcomps_S_INV:
+    mkl_free(S_INV);
+
+cleanup_zcomps_B_INV:
+    mkl_free(B_INV);
+
+    return success;
 }		/* -----  end of function zcomps  ----- */
 
 
@@ -453,7 +473,7 @@ get_grad ( int nsnps, int nsample, int zlen,
     if (B_INV == NULL || S_INV == NULL || GX_MZ == NULL || ZT_GT == NULL || 
             DBINV_DSIGMA == NULL || DSINV_DSIGMA == NULL || DBINV_DSIGMABG == NULL || DSINV_DSIGMABG == NULL || DSINV_DTAU == NULL ||
             DUM1 == NULL || DUM3 == NULL) {
-        printf( "C++ Error: Can't allocate memory for z-specific Bz / Sz. Aborting... \n");
+        printf( "C Error: Can't allocate memory for z-specific Bz / Sz. Aborting... \n");
         mkl_free(B_INV);
         mkl_free(S_INV);
         mkl_free(GX_MZ);
@@ -608,7 +628,7 @@ get_zexp ( int nsnps, int nsample, int zlen,
     FACTZ = (double *)mkl_malloc(         nsnps * sizeof( double ), 64 );
 
     if ( S_VZ_ == NULL || M_VZ_ == NULL || GT_GX == NULL || FACT0 == NULL || FACTZ == NULL ) {
-        printf( "C++ Error: Can't allocate memory GT_GX. Aborting... \n");
+        printf( "C Error: Can't allocate memory GT_GX. Aborting... \n");
         mkl_free(M_VZ_);
         mkl_free(S_VZ_);
         mkl_free(GT_GX);
@@ -668,7 +688,7 @@ get_zexp ( int nsnps, int nsample, int zlen,
  *  Description:  Wrapper function providing the marginal likelihood and the gradient
  * =====================================================================================
  */
-    double
+    bool
 logmarglik ( int     nsnps,
              int     nsample,
              int     zlen,
@@ -685,22 +705,23 @@ logmarglik ( int     nsnps,
              double* GX,
              double* ZCOMPS,
              double* GRAD,
-             double* ZEXP )
+             double* ZEXP,
+             double* logmL )
 {
     int     i, k;
     double  logk;
     double  zcompsum;
-    double  logmL;
+    bool    success;
+    bool    debug;
     
     double* BZINV; //for each zstate BZ is a matrix of size I x I
     double* SZINV; //for each zstate S  is a matrix of size N x N
 
-    bool debug;
-
     debug = false;
-    /*if (zlen > 10000) {
-        debug = true;
-    }*/
+
+    //if (zlen > 10000) {
+    //    debug = true;
+    //}
 
     if (debug) {
         printf ("%d zstates, %d SNPs and %d samples\n", zlen, nsnps, nsample);
@@ -710,51 +731,69 @@ logmarglik ( int     nsnps,
     }
     
     BZINV = (double *)mkl_malloc( (unsigned long)zlen * nsnps   * nsnps   * sizeof( double ), 64 );
-    SZINV = (double *)mkl_malloc( (unsigned long)zlen * nsample * nsample * sizeof( double ), 64 );
-    
-    if (BZINV == NULL || SZINV == NULL) {
-        printf( "C++ Error: Can't allocate memory for Bz / Sz. Aborting... \n");
-        mkl_free(BZINV);
-        mkl_free(SZINV);
-        exit(0);
-    } else {
-        if (debug) {
-            printf( "Memory allocation succesful before ZCOMPS.\n" );
-        }
-    }
+    if (BZINV == NULL) {success = false; goto cleanup_main_BZINV;}
 
-    get_zcomps ( nsnps, nsample, zlen, pi, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, ZCOMPS, BZINV, SZINV, debug );
+    SZINV = (double *)mkl_malloc( (unsigned long)zlen * nsample * nsample * sizeof( double ), 64 );
+    if (SZINV == NULL) {success = false; goto cleanup_main_SZINV;}
+    
+    success = get_zcomps ( nsnps, nsample, zlen, pi, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, ZCOMPS, BZINV, SZINV, debug );
     if (debug) {
         printf ( "ZCOMPS calculated.\n" );
     }
-    
+
+    if (success == false) {
+        logmL[0] = 0.0;
+        printf( "C error: Zcomps calculation did not succeed.\n" );
+        goto cleanup_main;
+    } 
+
     logk = ZCOMPS[0];
     for ( i=1; i < zlen; i++ ) {
         if ( ZCOMPS[i] > logk ) {
             logk = ZCOMPS[i];
         }
     }
+    if (debug) {
+        printf ( "logk calculated.\n" );
+    }
+
     zcompsum = 0.0;
     for (i = 0; i < zlen; i++) {
         zcompsum += exp(ZCOMPS[i] - logk);
     }
-    logmL = log(zcompsum) + logk ;
+    if (debug) {
+        printf ( "logmL calculating %f.\n", logmL[0] );
+    }
+    logmL[0] = log(zcompsum) + logk ;
 
     for ( i=0; i < zlen; i++ ) {
-        ZCOMPS[i] = exp(ZCOMPS[i] - logmL);
+        ZCOMPS[i] = exp(ZCOMPS[i] - logmL[0]);
+    }
+    if (debug) {
+        printf ( "ZCOMPS updated.\n" );
     }
         
     if (get_gradient) {
         get_grad ( nsnps, nsample, zlen, pi, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, ZCOMPS, BZINV, SZINV, GRAD );
     }
+    if (debug) {
+        printf ( "Gradients calculated.\n" );
+    }
 
     if (get_Mvz) {
         get_zexp ( nsnps, nsample, zlen, pi, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, BZINV, ZEXP );
     }
+    if (debug) {
+        printf ( "Everything done upto cleanup.\n" );
+    }
 
-    mkl_free(BZINV);
+cleanup_main:
+cleanup_main_SZINV:
     mkl_free(SZINV);
+
+cleanup_main_BZINV:
+    mkl_free(BZINV);
     
-    return logmL;
+    return success;
 
 }		/* -----  end of function logmarglik  ----- */
