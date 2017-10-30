@@ -21,7 +21,7 @@ def prune(newz, prob, oldprobsum, target):
     # sometimes posterior values could be so low that they can round off to zero
     # and there would be no state with cum > targ
     if len(nsel) == 0:
-        leadk = [[]]
+        leadk = []
     else:
         zlen = nsel[0] + 1                # when cum > targ for first time (add +1 since indexing starts from 0 / if nsel[0] = 4, then there are 5 states with higher probabilities)
         sel  = sort[:zlen]                # These are our new selection
