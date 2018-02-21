@@ -2,8 +2,10 @@
 
 import argparse
 import numpy as np
+import math
 
 from iotools.readvcf import ReadVCF
+from iotools.readOxford import ReadOxford
 from iotools.readrpkm import ReadRPKM
 from iotools.io_model import WriteModel
 from inference.linreg_association import LinRegAssociation
@@ -14,6 +16,7 @@ from iotools import readgtf
 from utils import gtutils
 from utils import mfunc
 from utils.containers import ZstateInfo
+from utils.printstamp import printStamp
 
 import pdb
 
@@ -23,11 +26,17 @@ def parse_args():
 
     parser = argparse.ArgumentParser(description='Bayesian model for learning genetic contribution in gene expression')
 
-    parser.add_argument('--vcf',
+    parser.add_argument('--gen',
                         type=str,
-                        dest='vcfpath',
+                        dest='gtpath',
                         metavar='FILE',
-                        help='input genotype file in vcf.gz format')
+                        help='input genotype file in Oxford format')
+
+    parser.add_argument('--sample',
+                        type=str,
+                        dest='samplepath',
+                        metavar='FILE',
+                        help='input file with list of samples')
 
 
     parser.add_argument('--expr',
@@ -64,6 +73,23 @@ def parse_args():
                         metavar='DIR',
                         help='name of the output directory for storing the model')
 
+    parser.add_argument('--split',
+                        type=int,
+                        dest='split',
+                        metavar='SPLIT',
+                        help='split the genes in SPLIT batches.')
+
+    parser.add_argument('--from',
+                        type=int,
+                        dest='fromg',
+                        metavar='FROM',
+                        help='Start from gene number.')
+
+    parser.add_argument('--to',
+                        type=int,
+                        dest='tog',
+                        metavar='TO',
+                        help='Calculate to gene number.')
 
     opts = parser.parse_args()
     return opts
@@ -76,46 +102,60 @@ def parse_args():
 
 opts = parse_args()
 
-# Genotype
-vcf = ReadVCF(opts.vcfpath, mode="DS")
-genotype = vcf.dosage
-vcf_donors = vcf.donor_ids
-snps = vcf.snpinfo
+# read Genotype
+oxf = ReadOxford(opts.gtpath, opts.samplepath, opts.chrom, "gtex")
+genotype = np.array(oxf.dosage)
+samplenames = oxf.samplenames
+snps = oxf.snps_info
 
 # Quality control
 snps, genotype = gtutils.remove_low_maf(snps, genotype, 0.1)
 gt = gtutils.normalize(snps, genotype)
 
-pdb.set_trace()
-
-# Annotation
-gene_info = readgtf.gencode_v12(opts.gtfpath, include_chrom = opts.chrom)
+# Annotation (use complete gene name in gtf without trimming the version)
+gene_info = readgtf.gencode_v12(opts.gtfpath, include_chrom = opts.chrom, trim=False)
 
 # Gene Expression
-rpkm = ReadRPKM(opts.rpkmpath)
+rpkm = ReadRPKM(opts.rpkmpath, "gtex")
 expression = rpkm.expression
 expr_donors = rpkm.donor_ids
 gene_names = rpkm.gene_names
 
 # Selection
-vcfmask, exprmask = mfunc.select_donors(vcf_donors, expr_donors)
+printStamp("Selection of samples")
+vcfmask, exprmask = mfunc.select_donors(samplenames, expr_donors)
 genes, indices = mfunc.select_genes(gene_info, gene_names)
 
 
 min_snps = 200
 pval_cutoff = 0.001
 window = 1000000
-cmax = 2
+zmax = 2    # z parameter
 init_params = np.array(opts.params)
 init_params[4] = 1 / init_params[4] / init_params[4]
 
 model = WriteModel(opts.outdir, opts.chrom)
 
-for i, gene in enumerate(genes[:5]):
+
+if opts.fromg < 0 or opts.tog <= opts.fromg:
+    raise Exception("Must specify FROM and TO gene number")
+
+if opts.fromg >= len(genes):
+    raise Exception("FROM is larger than number of genes")
+
+if opts.tog > len(genes):
+    opts.tog = len(genes)
+    printStamp("Changing TO_gene number to max genes "+str(len(genes)))
+
+printStamp("Actual number of calculated genes is "+str(opts.tog-opts.fromg))
+
+for i, gene in enumerate(genes[opts.fromg:opts.tog]):
+
+    printStamp("Learning for gene "+str(i))
+
     k = indices[i]
 
     # select only the cis-SNPs
-    pdb.set_trace()
     cismask = mfunc.select_snps(gene, snps, window)
     if len(cismask) > 0:
         target = expression[k, exprmask]
@@ -138,14 +178,15 @@ for i, gene in enumerate(genes[:5]):
         print ("Starting first optimization ==============")
         emp_bayes = EmpiricalBayes(predictor, target, 1, init_params, method="new")
         emp_bayes.fit()
-        if cmax > 1:
+        if zmax > 1:
             if emp_bayes.success:
                 res = emp_bayes.params
                 print ("Starting second optimization from previous results ================")
+                # Python Error: C library could not compute z-components. Check C errors above.
             else:
                 res = init_params
                 print ("Starting second optimization from initial parameters ================")
-            emp_bayes = EmpiricalBayes(predictor, target, cmax, res, method="new")
+            emp_bayes = EmpiricalBayes(predictor, target, zmax, res, method="new")
             emp_bayes.fit()
             
 
@@ -156,7 +197,7 @@ for i, gene in enumerate(genes[:5]):
 
             model_snps = [snps[x] for x in snpmask]
             model_zstates = list()
-            scaledparams = hyperparameters.scale(emp_bayes.params)
+            scaledparams = hyperparameters.scale(emp_bayes.params)  # [pi, mu, sigma, sigmabg, tau]
             zprob, zexp = logmarglik.model_exp(scaledparams, predictor, target, emp_bayes.zstates)
             for j, z in enumerate(emp_bayes.zstates):
                 this_zstate = ZstateInfo(state = z,
@@ -164,6 +205,7 @@ for i, gene in enumerate(genes[:5]):
                                          exp   = list(zexp[j, :]) )
                 model_zstates.append(this_zstate)
             model.write_success_gene(gene, model_snps, model_zstates, res)
+            # model.write_params(gene, scaledparams)
         else:
             model.write_failed_gene(gene, np.zeros_like(init_params))
             print ("Failed optimization")

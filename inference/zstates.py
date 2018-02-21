@@ -12,7 +12,7 @@ def prune(newz, prob, oldprobsum, target):
     '''
     
     znorm = len(newz[0])
-    #print ("Pruning z-states of znorm {:d}".format(znorm))
+    # print ("Pruning z-states of znorm {:d}".format(znorm))
     sort = np.argsort(prob)[::-1]             # index of decreasing order of prob. prob[sort] should be the sorted array
     cum  = oldprobsum + np.cumsum(prob[sort]) # cumulative sum, ensured that it will reach 1
     nsel = np.where(cum > target)[0]          # find where cum > target
@@ -29,8 +29,8 @@ def prune(newz, prob, oldprobsum, target):
         zlen = len(sel)
 
         # For debug
-        #print(probsum)
-        #print(prob[sort][:10] / probsum)
+        # print(cum)
+        # print(prob[sort][:10] / probsum)
 
         # These are our leading states from which terms with znorm (k+1) will be created
         leadk = [newz[sel[i]] for i in range(zlen)]
@@ -62,9 +62,12 @@ def create(scaledparams, x, y, cmax, nvar, target):
     old_probsum = np.sum(old_prob)
 
     # Add the ones required
+    print(old_probsum, target)
     selk = prune(newk, prob, old_probsum, target)
     if len(selk) > 0:
         zstates += selk
+
+    print("Working with "+str(len(zstates))+" zstates.")
 
     oldk = selk
 
@@ -77,6 +80,7 @@ def create(scaledparams, x, y, cmax, nvar, target):
             break
 
         norm += 1
+        print("Norm is "+str(norm)+" while cmax is "+str(cmax))
         nsel = len(selk)
 
         # assure there is at least one zstate 

@@ -2,8 +2,10 @@
 
 import argparse
 import numpy as np
+import math
 
 from iotools.readvcf import ReadVCF
+from iotools.readOxford import ReadOxford
 from iotools.readrpkm import ReadRPKM
 from iotools.io_model import WriteModel
 from inference.linreg_association import LinRegAssociation
@@ -14,6 +16,7 @@ from iotools import readgtf
 from utils import gtutils
 from utils import mfunc
 from utils.containers import ZstateInfo
+from utils.printstamp import printStamp
 
 import pdb
 
@@ -23,11 +26,17 @@ def parse_args():
 
     parser = argparse.ArgumentParser(description='Bayesian model for learning genetic contribution in gene expression')
 
-    parser.add_argument('--vcf',
+    parser.add_argument('--gen',
                         type=str,
-                        dest='vcfpath',
+                        dest='gtpath',
                         metavar='FILE',
-                        help='input genotype file in vcf.gz format')
+                        help='input genotype file in Oxford format')
+
+    parser.add_argument('--sample',
+                        type=str,
+                        dest='samplepath',
+                        metavar='FILE',
+                        help='input file with list of samples')
 
 
     parser.add_argument('--expr',
@@ -64,6 +73,25 @@ def parse_args():
                         metavar='DIR',
                         help='name of the output directory for storing the model')
 
+    parser.add_argument('--split',
+                        type=int,
+                        dest='split',
+                        metavar='SPLIT',
+                        help='split the genes in SPLIT batches.')
+
+    parser.add_argument('--section',
+                        type=int,
+                        dest='section',
+                        metavar='SECTION',
+                        help='Selects which batch to run, must be between 0 and SPLIT-1')
+
+    parser.add_argument('--zmax',
+                        type=int,
+                        default=2,
+                        dest='zmax',
+                        metavar='ZMAX',
+                        help='maximum number of Zstates')
+
 
     opts = parser.parse_args()
     return opts
@@ -76,46 +104,69 @@ def parse_args():
 
 opts = parse_args()
 
-# Genotype
-vcf = ReadVCF(opts.vcfpath, mode="DS")
-genotype = vcf.dosage
-vcf_donors = vcf.donor_ids
-snps = vcf.snpinfo
+if opts.section != None and opts.split != None and opts.section > opts.split:
+    raise Exception("SECTION number cannot be greater than number of available batches to run (SPLIT)")
+
+# read Genotype
+oxf = ReadOxford(opts.gtpath, opts.samplepath, opts.chrom, "gtex")
+genotype = np.array(oxf.dosage)
+samplenames = oxf.samplenames
+snps = oxf.snps_info
 
 # Quality control
 snps, genotype = gtutils.remove_low_maf(snps, genotype, 0.1)
 gt = gtutils.normalize(snps, genotype)
 
-pdb.set_trace()
-
-# Annotation
-gene_info = readgtf.gencode_v12(opts.gtfpath, include_chrom = opts.chrom)
+# Annotation (use complete gene name in gtf without trimming the version)
+gene_info = readgtf.gencode_v12(opts.gtfpath, include_chrom = opts.chrom, trim=False)
 
 # Gene Expression
-rpkm = ReadRPKM(opts.rpkmpath)
+rpkm = ReadRPKM(opts.rpkmpath, "gtex")
 expression = rpkm.expression
 expr_donors = rpkm.donor_ids
 gene_names = rpkm.gene_names
 
 # Selection
-vcfmask, exprmask = mfunc.select_donors(vcf_donors, expr_donors)
+printStamp("Selection of samples")
+vcfmask, exprmask = mfunc.select_donors(samplenames, expr_donors)
 genes, indices = mfunc.select_genes(gene_info, gene_names)
 
 
 min_snps = 200
 pval_cutoff = 0.001
 window = 1000000
-cmax = 2
+zmax = opts.zmax    # z parameter
 init_params = np.array(opts.params)
 init_params[4] = 1 / init_params[4] / init_params[4]
 
 model = WriteModel(opts.outdir, opts.chrom)
 
-for i, gene in enumerate(genes[:5]):
+batch_size = None
+gene_number = len(genes)
+
+# for testing
+# gene_number = 10
+
+
+if opts.split and opts.split > 1:
+    if gene_number > opts.split:
+        print("Gene number: ", gene_number)
+        batch_size = math.ceil(gene_number / opts.split)
+        print("Splitting in batches of ", batch_size)
+    else:
+        raise Exception("Split number is greater than number of genes. Cannot split the job")
+
+for i, gene in enumerate(genes):
+
+    # if gene number is outside of the range, do not calculate and continue
+    if opts.split and opts.section >= 0 and (i < batch_size*opts.section or i >= (batch_size*opts.section + batch_size)):
+        continue
+
+    printStamp("Learning for gene "+str(i))
+
     k = indices[i]
 
     # select only the cis-SNPs
-    pdb.set_trace()
     cismask = mfunc.select_snps(gene, snps, window)
     if len(cismask) > 0:
         target = expression[k, exprmask]
@@ -138,14 +189,15 @@ for i, gene in enumerate(genes[:5]):
         print ("Starting first optimization ==============")
         emp_bayes = EmpiricalBayes(predictor, target, 1, init_params, method="new")
         emp_bayes.fit()
-        if cmax > 1:
+        if zmax > 1:
             if emp_bayes.success:
                 res = emp_bayes.params
                 print ("Starting second optimization from previous results ================")
+                # Python Error: C library could not compute z-components. Check C errors above.
             else:
                 res = init_params
                 print ("Starting second optimization from initial parameters ================")
-            emp_bayes = EmpiricalBayes(predictor, target, cmax, res, method="new")
+            emp_bayes = EmpiricalBayes(predictor, target, zmax, res, method="new")
             emp_bayes.fit()
             
 

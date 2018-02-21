@@ -1,0 +1,518 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "/home/franco/cbscratch/PredictDBPipeline/joblogs/example/create_model.R",
+			"settings":
+			{
+				"buffer_size": 494,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/franco/cbscratch/PredictDBPipeline/scripts/GTEx_Tissue_Wide_CV_elasticNet.R",
+			"settings":
+			{
+				"buffer_size": 7125,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/franco/cbscratch/PredictDBPipeline/joblogs/example/train_models.py",
+			"settings":
+			{
+				"buffer_size": 932,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/franco/cbscratch/PredictDBPipeline/joblogs/example/train_model_by_chr.pbs",
+			"settings":
+			{
+				"buffer_size": 1511,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/franco/cbscratch/PredictDBPipeline/joblogs/example/preprocess_example.py",
+			"settings":
+			{
+				"buffer_size": 2382,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/franco/cbscratch/PredictDBPipeline/scripts/split_genotype_by_chr.py",
+			"settings":
+			{
+				"buffer_size": 2532,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/home/franco/cbscratch/PredictDBPipeline",
+		"/home/franco/cbscratch/PredictDBPipeline/joblogs",
+		"/home/franco/cbscratch/PredictDBPipeline/joblogs/example",
+		"/home/franco/cbscratch/PredictDBPipeline/scripts"
+	],
+	"file_history":
+	[
+		"/home/franco/cbscratch/PredictDBPipeline/scripts/snp_annot_to_RDS.R",
+		"/home/franco/gtex_expr_normalization/gtex_normalization.py",
+		"/home/franco/cluster2/PredictDBPipeline/joblogs/example/preprocess_example.py",
+		"/home/franco/cluster2/PredictDBPipeline/joblogs/example/create_model.R",
+		"/home/franco/cluster2/PredictDBPipeline/scripts/GTEx_Tissue_Wide_CV_elasticNet.R",
+		"/home/franco/cluster2/PredictDBPipeline/joblogs/example/train_model_by_chr.pbs",
+		"/home/franco/cluster2/PredictDBPipeline/joblogs/example/model_parameters.py",
+		"/home/franco/cluster2/PredictDBPipeline/joblogs/example/train_models.py",
+		"/home/franco/cluster2/PredictDBPipeline/scripts/split_snp_annot_by_chr.py",
+		"/home/franco/cluster2/PredictDBPipeline/scripts/expr_to_transposed_RDS.R",
+		"/home/franco/cluster2/PredictDBPipeline/gtexdata/GTEx_Analysis_v6p_eQTL_covariates/Whole_Blood_Analysis.v6p.covariates.txt",
+		"/home/franco/cluster2/PredictDBPipeline/scripts/create_meta_data.py",
+		"/home/franco/cluster2/PredictDBPipeline/scripts/custom_snp_annot_to_RDS.R",
+		"/home/franco/cluster2/PredictDBPipeline/scripts/snp_annot_to_RDS.R",
+		"/home/franco/cluster2/PredictDBPipeline/joblogs/GTEx_1Mb_1KG/train_models.py",
+		"/home/franco/cluster2/PredictDBPipeline/scripts/geno_annot_to_RDS.R",
+		"/home/franco/cluster2/PredictDBPipeline/scripts/split_genotype_by_chr.py",
+		"/home/franco/cluster2/gxpred/utils/mfunc.py",
+		"/home/franco/cluster2/gxpred/learn_gtex.py",
+		"/home/franco/cluster2/gxpred/learn.py",
+		"/home/franco/cluster2/gxpred/morning_report",
+		"/home/franco/cluster2/gxpred/local_run_learn_gtex.sh",
+		"/home/franco/cluster2/gxpred/debug/sorted_mem_usage",
+		"/home/franco/cluster2/gxpred/debug/memory_usage_learning_gtex",
+		"/home/franco/cluster2/gxpred/debug/incremental_memory_usage_test_sliding_offset",
+		"/home/franco/cluster2/possible_broken_genes",
+		"/home/franco/cluster2/gxpred/iotools/readOxford.py",
+		"/home/franco/cluster2/gxpred/learn_gtex_specific_gene_test.py",
+		"/home/franco/cluster2/gxpred/learn_gtex_memtest.py",
+		"/home/franco/cluster2/gxpred/iotools/readrpkm.py",
+		"/home/franco/cluster2/gxpred/cluster_run_learn_gtex_c1.sh",
+		"/home/franco/cluster2/gxpred/cluster_run_learn_gtex.sh",
+		"/home/franco/cluster2/gxpred/cluster_run_memtest_gxpred.sh",
+		"/home/franco/cluster2/gxpred/cluster_run_learn_single_gene.sh",
+		"/home/franco/cluster2/gxpred/inference/empirical_bayes.py",
+		"/home/franco/cluster2/gxpred/inference/zstates.py",
+		"/home/franco/cluster2/gxpred/lib/zstates_py.cpp",
+		"/home/franco/cluster2/gxpred/predict_gtex.py",
+		"/home/franco/cluster2/gxpred/run_predict_cardiogenics.sh",
+		"/home/franco/cluster2/gxpred/run_predict_gtex.sh",
+		"/home/franco/deep/deeper.py",
+		"/home/franco/PrediXcan/Software/compare_predicted_genes.py",
+		"/home/franco/cluster2/gxpred/inference/zstates_old_method.py",
+		"/home/franco/cluster2/gxpred/inference/linreg_association.py",
+		"/home/franco/cluster2/gxpred/utils/gtutils.py",
+		"/home/franco/cluster2/gxpred/iotools/io_model.py",
+		"/home/franco/cluster2/gxpred/inference/logmarglik.py",
+		"/home/franco/gxpred/run_learn_cardiogenics.sh",
+		"/home/franco/gxpred/run_learn_gtex.sh",
+		"/home/franco/gxpred/lib/Makefile_debug",
+		"/home/franco/gxpred/inference/zstates_old_method.py",
+		"/home/franco/gxpred/lib/linear_regression.c",
+		"/home/franco/gxpred/inference/linreg_association.py",
+		"/home/franco/gxpred/iotools/readOxford.py",
+		"/home/franco/gxpred/learn_cardiogenics.py",
+		"/home/franco/gxpred/utils/mfunc.py",
+		"/home/franco/gxpred/utils/gtutils.py",
+		"/home/franco/gxpred/iotools/readrpkm.py",
+		"/home/franco/gxpred/iotools/readgtf.py",
+		"/home/franco/gxpred/iotools/readvcf.py",
+		"/home/franco/gxpred/utils/printstamp.py",
+		"/home/franco/gxpred/predict.py",
+		"/home/franco/gxpred/README.md",
+		"/home/franco/ReRunNetworks.php",
+		"/home/franco/gxpred/utils/containers.py",
+		"/home/franco/PrediXcan/Software/predict_gene_expression.py",
+		"/home/franco/ReRunJob.php",
+		"/home/franco/Desktop/comandos_para_guido",
+		"/media/disk2/mistic/docker-run.sh",
+		"/home/franco/gxpred/lib/Makefile",
+		"/home/franco/gxpred/lib/logmarglik.c",
+		"/home/franco/Downloads/gapstrip.jl",
+		"/home/franco/Downloads/convertSTO2FASTA.jl",
+		"/home/franco/Downloads/convertfa2sto.py",
+		"/home/franco/Downloads/cd00002.aligned.sto",
+		"/home/franco/Downloads/cd00002.sto",
+		"/home/franco/Downloads/cd00002.fa",
+		"/media/disk2/pfamserver/pfamserver/api.py",
+		"/media/disk2/pfamserver/pfamserver/database.py",
+		"/media/disk2/pfamserver/pfamserver/autoupdate/loader.py",
+		"/media/disk2/pfamserver/pfamserver/config.py",
+		"/media/disk2/pfamserver/pfamserver/autoupdate/core.py",
+		"/media/disk2/pfamserver/pfamserver/autoupdate/autoupdate.py",
+		"/media/disk2/pfamserver/pfamserver/autoupdate/scheduler.py",
+		"/media/disk2/pfamserver/pfamserver/__main__.py",
+		"/media/disk2/pfamserver/Makefile",
+		"/media/disk2/pfamserver/README.md",
+		"/media/disk2/pfamserver/pfamserver/autoupdate/__init__.py",
+		"/home/franco/Documents/wiki_ssh_tutorial",
+		"/media/disk2/pfamserver/pfamserver/__init__.py",
+		"/home/franco/bin/b-lore/blore/snptools/dosageparser.py",
+		"/home/franco/bin/b-lore/blore/inference/summary_stat.py",
+		"/home/franco/gxpred/iotools/io_model.py",
+		"/home/franco/bin/b-lore/example/commands.sh",
+		"/home/franco/bin/b-lore/blore/iotools/io_summary.py",
+		"/home/franco/gxpred/learn_from_geuvadis.py",
+		"/home/franco/bin/b-lore/example/input/functional_annotation/Locus.001.feat",
+		"/home/franco/bin/b-lore/example/input/pop1/Locus.001.gen",
+		"/home/franco/bin/b-lore/blore/iotools/io_covariates.py",
+		"/home/franco/Downloads/circos/201604191312503278.circos.conf",
+		"/home/franco/Downloads/circos/201604191312503278.link0.circos",
+		"/home/franco/Downloads/circos/201604191312503278.data.circos",
+		"/home/franco/Downloads/circos/201604191312503278.labels.circos"
+	],
+	"find":
+	{
+		"height": 39.0
+	},
+	"find_in_files":
+	{
+		"height": 98.0,
+		"where_history":
+		[
+			"/home/franco/cbscratch/PredictDBPipeline/scripts",
+			"/home/franco/cbscratch/PredictDBPipeline"
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"minor allele",
+			"maf",
+			"columns",
+			"covarian",
+			"tis",
+			"snpset",
+			"output",
+			"GENE_ANNOT_INTER2",
+			"gene_annot_inter",
+			"genotype",
+			"[i]",
+			" [i]"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 5,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "/home/franco/cbscratch/PredictDBPipeline/joblogs/example/create_model.R",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 494,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								365,
+								365
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/R/R.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "/home/franco/cbscratch/PredictDBPipeline/scripts/GTEx_Tissue_Wide_CV_elasticNet.R",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 7125,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								33,
+								33
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/R/R.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "/home/franco/cbscratch/PredictDBPipeline/joblogs/example/train_models.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 932,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "/home/franco/cbscratch/PredictDBPipeline/joblogs/example/train_model_by_chr.pbs",
+					"semi_transient": true,
+					"settings":
+					{
+						"buffer_size": 1511,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/ShellScript/Shell-Unix-Generic.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "/home/franco/cbscratch/PredictDBPipeline/joblogs/example/preprocess_example.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2382,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "/home/franco/cbscratch/PredictDBPipeline/scripts/split_genotype_by_chr.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2532,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1146,
+								1146
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 26.0
+	},
+	"input":
+	{
+		"height": 38.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "predictdb.sublime-project",
+	"replace":
+	{
+		"height": 48.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"",
+				"~/cluster_gxpred.sublime-project"
+			]
+		],
+		"width": 380.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 329.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

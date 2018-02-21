@@ -31,8 +31,10 @@ class ReadRPKM:
     _read_annotation_once = False
 
 
-    def __init__(self, filepath):
+    def __init__(self, filepath, dataset):
         self._rpkmfile = os.path.realpath(filepath)
+        self._dataset = dataset
+        self._genenames = None
 
 
     @property
@@ -58,20 +60,46 @@ class ReadRPKM:
             return
         self._read_expression_once = True
         self._read_gene_expression()
-        self._read_gene_names()
+        if self._dataset == "cardiogenics":
+            self._read_gene_names()
+
+    def _read_cardiogenics(self):
+        expr_list = list()
+        donor_list = list()
+        with open(self._rpkmfile) as mfile:
+            for line in mfile:
+                linesplit = line.strip().split()
+                donor = linesplit[0].strip()
+                expr = np.array([float(x) for x in linesplit[2:]])
+                expr_list.append(expr)
+                donor_list.append(donor)
+        return expr_list, donor_list
+    
+    def _read_gtex(self):
+        expr_list = list()
+        donor_list = list()
+        gene_list = list()
+        with open(self._rpkmfile) as mfile:
+            donor_list = mfile.readline().strip().split()[1:]
+            for line in mfile:
+                linesplit = line.strip().split()
+                gene = linesplit[0].strip()
+                gene_list.append(gene)
+                expr = np.array([float(x) for x in linesplit[1:]])
+                expr_list.append(expr)
+        expr_list = np.transpose(np.array(expr_list))
+        self._genenames = gene_list
+        return expr_list, donor_list
 
 
     def _read_gene_expression(self):
         expr_list = list()
         donor_list = list()
         try:
-            with open(self._rpkmfile) as mfile:
-                for line in mfile:
-                    linesplit = line.strip().split("\t")
-                    donor = linesplit[1].strip()
-                    expr = np.array([float(x) for x in linesplit[2:]])
-                    expr_list.append(expr)
-                    donor_list.append(donor)
+            if self._dataset == "cardiogenics":
+                expr_list, donor_list = self._read_cardiogenics()
+            if self._dataset == "gtex":
+                expr_list, donor_list = self._read_gtex()
         except IOError as err:
             raise IOError("{:s}: {:s}".format(self._rpkmfile, err.strerror))
         expression = np.array(expr_list).transpose()

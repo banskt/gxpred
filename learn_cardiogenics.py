@@ -4,6 +4,7 @@ import argparse
 import numpy as np
 
 from iotools.readvcf import ReadVCF
+from iotools.readOxford import ReadOxford
 from iotools.readrpkm import ReadRPKM
 from iotools.io_model import WriteModel
 from inference.linreg_association import LinRegAssociation
@@ -14,6 +15,7 @@ from iotools import readgtf
 from utils import gtutils
 from utils import mfunc
 from utils.containers import ZstateInfo
+from utils.printstamp import printStamp
 
 import pdb
 
@@ -23,11 +25,17 @@ def parse_args():
 
     parser = argparse.ArgumentParser(description='Bayesian model for learning genetic contribution in gene expression')
 
-    parser.add_argument('--vcf',
+    parser.add_argument('--gen',
                         type=str,
-                        dest='vcfpath',
+                        dest='gtpath',
                         metavar='FILE',
-                        help='input genotype file in vcf.gz format')
+                        help='input genotype file in Oxford format')
+
+    parser.add_argument('--sample',
+                        type=str,
+                        dest='samplepath',
+                        metavar='FILE',
+                        help='input file with list of samples')
 
 
     parser.add_argument('--expr',
@@ -76,20 +84,19 @@ def parse_args():
 
 opts = parse_args()
 
-# Genotype
-vcf = ReadVCF(opts.vcfpath, mode="DS")
-genotype = vcf.dosage
-vcf_donors = vcf.donor_ids
-snps = vcf.snpinfo
+# read Genotype
+oxf = ReadOxford(opts.gtpath, opts.samplepath, opts.chrom, "cardiogenics")
+genotype = np.array(oxf.dosage)
+samplenames = oxf.samplenames
+snps = oxf.snps_info
+
 
 # Quality control
 snps, genotype = gtutils.remove_low_maf(snps, genotype, 0.1)
 gt = gtutils.normalize(snps, genotype)
 
-pdb.set_trace()
-
 # Annotation
-gene_info = readgtf.gencode_v12(opts.gtfpath, include_chrom = opts.chrom)
+gene_info = readgtf.gencode_v12(opts.gtfpath, include_chrom = opts.chrom, trim=True)
 
 # Gene Expression
 rpkm = ReadRPKM(opts.rpkmpath)
@@ -97,9 +104,13 @@ expression = rpkm.expression
 expr_donors = rpkm.donor_ids
 gene_names = rpkm.gene_names
 
+pdb.set_trace()
+
 # Selection
-vcfmask, exprmask = mfunc.select_donors(vcf_donors, expr_donors)
+printStamp("Selection of samples")
+vcfmask, exprmask = mfunc.select_donors(samplenames, expr_donors)
 genes, indices = mfunc.select_genes(gene_info, gene_names)
+
 
 
 min_snps = 200
@@ -111,11 +122,16 @@ init_params[4] = 1 / init_params[4] / init_params[4]
 
 model = WriteModel(opts.outdir, opts.chrom)
 
-for i, gene in enumerate(genes[:5]):
+for i, gene in enumerate(genes):
+
+    printStamp("Learning for gene "+str(i))
+
     k = indices[i]
 
+
+
+
     # select only the cis-SNPs
-    pdb.set_trace()
     cismask = mfunc.select_snps(gene, snps, window)
     if len(cismask) > 0:
         target = expression[k, exprmask]
@@ -142,6 +158,7 @@ for i, gene in enumerate(genes[:5]):
             if emp_bayes.success:
                 res = emp_bayes.params
                 print ("Starting second optimization from previous results ================")
+                # Python Error: C library could not compute z-components. Check C errors above.
             else:
                 res = init_params
                 print ("Starting second optimization from initial parameters ================")

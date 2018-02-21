@@ -22,7 +22,7 @@ def select_donors(vcf_donors, expr_donors):
     vcfmask = np.array([vcf_donors.index(x) for x in common_donors])
     exprmask = np.array([expr_donors.index(x) for x in common_donors])
     return vcfmask, exprmask
-
+    
 
 def select_snps(gene, snpinfo, window):
     ''' Find indices of the genotype matrix
@@ -31,12 +31,13 @@ def select_snps(gene, snpinfo, window):
     chrom = gene.chrom
     start = gene.start - window
     end = gene.end + window
-    indices = [i for i, snp in enumerate(snpinfo) if snp.chrom == chrom and
-                                                     snp.bp_pos < end and
-                                                     snp.bp_pos > start and
-                                                     snp.alt_allele != SNP_COMPLEMENT[snp.ref_allele] and
-                                                     max(len(snp.ref_allele), len(snp.alt_allele)) == 1 and
-                                                     snp.maf > 0.05 and snp.maf < 1.95]
+    selected_snp = [(i,snp) for i, snp in enumerate(snpinfo) if max(len(snp.ref_allele), len(snp.alt_allele)) == 1]
+    indices = [snp[0] for snp in selected_snp if snp[1].chrom == chrom and
+                                                 snp[1].bp_pos < end and
+                                                 snp[1].bp_pos > start and
+                                                 snp[1].alt_allele != SNP_COMPLEMENT[snp[1].ref_allele] and
+                                                 max(len(snp[1].ref_allele), len(snp[1].alt_allele)) == 1 and
+                                                 snp[1].maf > 0.05 and snp[1].maf < 0.95]
     return np.array(indices)
 
 

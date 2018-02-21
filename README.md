@@ -13,7 +13,7 @@ GxPRED provides core utilities / API for learning and predicting gene expression
     CODEBASE = "/path/to/this/directory"
     TRAINVCF = "/path/to/gz/vcf/file/for/training"
     TRAINRPKM = "/path/to/normalized/gene/expression/file/for/training"
-    TRAINGTF = "/path/to/gtf/file"
+    TRAINGTF = "/path/to/gtf/file_in_gz_format"
     CHROM = "21" # change it to whichever chromosome you are interested 
     PREDVCF = "/path/to/gz/vcf/for/prediction/samples"
     MODELDIR = "/path/to/directory/where/model/will/be/saved"

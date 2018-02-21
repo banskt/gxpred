@@ -1,0 +1,29 @@
+2018-01-09 13:21:22 - Learning for gene 2
+Found 1860 SNPs, reduced to 200 SNPs (max p-value 0.119391) for HES4
+
+
+
+ABNORMAL_TERMINATION_IN_LNSRCH                              
+
+ Line search cannot locate an adequate point after 20 function
+  and gradient evaluations.  Previous x, f and g restored.
+ Possible causes: 1 error in function or gradient evaluation;
+                  2 rounding error dominate computation.
+
+ Cauchy                time 0.000E+00 seconds.
+ Subspace minimization time 0.000E+00 seconds.
+ Line search           time 0.000E+00 seconds.
+
+ Total User time 0.000E+00 seconds.
+
+      fun: 470.93195223462897
+ hess_inv: <5x5 LbfgsInvHessProduct with dtype=float64>
+      jac: array([  4.11136480e-06,  -5.70947573e-10,   3.92927300e-12,
+        -7.01778788e-07,  -6.74884810e-06])
+  message: 'ABNORMAL_TERMINATION_IN_LNSRCH'
+     nfev: 21
+      nit: 0
+   status: 2
+  success: False
+        x: array([-17.69461352,   0.        ,  -6.90772723,  -3.42259627,  -0.07506924])
+Failed optimization

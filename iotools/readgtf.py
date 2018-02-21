@@ -10,7 +10,7 @@ import gzip
 from utils.containers import GeneInfo
 
 
-def gencode_v12(filepath, feature = 'gene', biotype=['protein_coding'], include_chrom = 0, include_chroms=['{:d}'.format(x + 1) for x in range(22)]):
+def gencode_v12(filepath, feature = 'gene', trim=False, biotype=['protein_coding'], include_chrom = 0, include_chroms=['{:d}'.format(x + 1) for x in range(22)]):
     annotfile = os.path.realpath(filepath)
     geneinfo = list()
     try:
@@ -40,6 +40,8 @@ def gencode_v12(filepath, feature = 'gene', biotype=['protein_coding'], include_
                     raise ValueError('Strand not specified.')
 
                 gene_id = infolist[0].strip().split(' ')[1].replace('"','')
+                if trim:
+                    gene_id = gene_id.split(".")[0]
                 gene_name = infolist[4].strip().split(' ')[1].replace('"','')
                 this_gene = GeneInfo(name       = gene_name,
                                      ensembl_id = gene_id,
