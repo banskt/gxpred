@@ -10,7 +10,8 @@ def czcompgrad(params, x, y, zstates, get_grad=True, get_exp=False):
         an efficient C code for calculating log marginal likelihood and gradient.
     '''
     _path = os.path.dirname(__file__)
-    clib = np.ctypeslib.load_library('../lib/logmarglik.so', _path)
+    # clib = np.ctypeslib.load_library('../lib/logmarglik.so', _path)
+    clib = np.ctypeslib.load_library('../lib/logmarglik_bslmm.so', _path)
     double_pointer = ctypes.POINTER(ctypes.c_double)
 
     czcomps = clib.logmarglik

@@ -23,9 +23,9 @@ OUTDIR="/cbscratch/franco/datasets/gtex_models/dev_models"
 FROM="0"
 TO="1"
 echo $FROM $TO
-bsub -n 8 -a openmp -q mpi -R span[hosts=1] -R cbscratch \
-	 -o ${OUTDIR}/dev.log -e ${OUTDIR}/dev.err\
-			$ENV/bin/python $GXPRED \
+#echo bsub -n 8 -a openmp -q mpi -R span[hosts=1] -R cbscratch \
+	 # -o ${OUTDIR}/dev.log -e ${OUTDIR}/dev.err
+	 echo 		$ENV/bin/python $GXPRED \
 			--gen ${GTFOLDER}/${GTFILE} --sample ${GTFOLDER}/${SAMPLEFILE} \
 			--gtf ${GTFPATH} --chr ${CHROM} \
 			--expr ${EXPR} --out ${OUTDIR} --from $FROM --to $TO
