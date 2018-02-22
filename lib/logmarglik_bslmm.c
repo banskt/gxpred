@@ -608,7 +608,7 @@ get_grad ( int nsnps, int nsample, int zlen,
             }
         }
         dlogdetS_dsigma   = 2.0 * dlogdetS_dsigma   * sigma_by_sigmaz4;
-        dlogdetS_dsigmabg = 2.0 * dlogdetS_dsigmabg / sigmabg3;
+        // dlogdetS_dsigmabg = 2.0 * dlogdetS_dsigmabg ;
         a_matT_matb_mat ( nsnps, nsample, (-tau*tau), GT, DBINV_DSIGMA,   DSINV_DSIGMA,   DUM3 );
         a_matT_matb_mat ( nsnps, nsample, (-tau*tau), GT, DBINV_DSIGMABG, DSINV_DSIGMABG, DUM3 );
         sigmacomp     = - 0.5 * ( dlogdetS_dsigma   + vecAT_smat_vecB( nsample, GX_MZ, DSINV_DSIGMA,   GX_MZ, DUM1 ) );
