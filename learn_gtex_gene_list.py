@@ -73,25 +73,17 @@ def parse_args():
                         metavar='DIR',
                         help='name of the output directory for storing the model')
 
-    parser.add_argument('--split',
-                        type=int,
-                        dest='split',
-                        metavar='SPLIT',
-                        help='split the genes in SPLIT batches.')
+    parser.add_argument('--genelist',
+                        type=str,
+                        dest='genelistfile',
+                        metavar='GENELIST',
+                        help='File with list of ensmebl_ids to learn.')
 
-    parser.add_argument('--section',
+    parser.add_argument('--zstates',
                         type=int,
-                        dest='section',
-                        metavar='SECTION',
-                        help='Selects which batch to run, must be between 0 and SPLIT-1')
-
-    parser.add_argument('--zmax',
-                        type=int,
-                        default=2,
-                        dest='zmax',
-                        metavar='ZMAX',
-                        help='maximum number of Zstates')
-
+                        dest='zstates',
+                        metavar='ZSTATES',
+                        help='Number of Zstates to use (1 to 5)?')
 
     opts = parser.parse_args()
     return opts
@@ -103,9 +95,6 @@ def parse_args():
 # 3. check if expression file exist
 
 opts = parse_args()
-
-if opts.section != None and opts.split != None and opts.section > opts.split:
-    raise Exception("SECTION number cannot be greater than number of available batches to run (SPLIT)")
 
 # read Genotype
 oxf = ReadOxford(opts.gtpath, opts.samplepath, opts.chrom, "gtex")
@@ -135,34 +124,24 @@ genes, indices = mfunc.select_genes(gene_info, gene_names)
 min_snps = 200
 pval_cutoff = 0.001
 window = 1000000
-zmax = opts.zmax    # z parameter
+zmax = opts.zstates    # z parameter
 init_params = np.array(opts.params)
 init_params[4] = 1 / init_params[4] / init_params[4]
 
 model = WriteModel(opts.outdir, opts.chrom)
 
-batch_size = None
-gene_number = len(genes)
 
-# for testing
-# gene_number = 10
-
-
-if opts.split and opts.split > 1:
-    if gene_number > opts.split:
-        print("Gene number: ", gene_number)
-        batch_size = math.ceil(gene_number / opts.split)
-        print("Splitting in batches of ", batch_size)
-    else:
-        raise Exception("Split number is greater than number of genes. Cannot split the job")
+gene_list = []
+with open(opts.genelistfile, 'r') as instream:
+    for line in instream:
+        gene_list.append(line.strip())
 
 for i, gene in enumerate(genes):
 
-    # if gene number is outside of the range, do not calculate and continue
-    if opts.split and opts.section >= 0 and (i < batch_size*opts.section or i >= (batch_size*opts.section + batch_size)):
+    if gene.ensembl_id not in gene_list:
         continue
 
-    printStamp("Learning for gene "+str(i))
+    printStamp("Learning for gene "+str(gene.ensembl_id))
 
     k = indices[i]
 
@@ -185,8 +164,7 @@ for i, gene in enumerate(genes):
             print ("Found {:d} SNPs for {:s}".format(len(cismask), gene.name))
 
         # perform the analysis
-        np.random.shuffle(predictor.T)
-
+        
         print ("Starting first optimization ==============")
         emp_bayes = EmpiricalBayes(predictor, target, 1, init_params, method="new")
         emp_bayes.fit()

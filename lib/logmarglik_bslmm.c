@@ -651,7 +651,7 @@ get_grad ( int nsnps, int nsample, int zlen,
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  get_zexp
- *  Description:  Calculate the mean of P(v_tg | x, y, theta, tau)
+ *  Description:  Calculate the mean of P(v_tg | x, y, theta, tau) Eq 3.13
  *                It is denoted as M_vz in the theory.
  *                For every z-state, M_vz is a vector of size I.
  *                The result is stored in a single array ZEXP of size nz * I.
@@ -713,7 +713,7 @@ get_zexp ( int nsnps, int nsample, int zlen,
         }
         for ( i = 0; i < nz; i++ ) {
             zpos = ZARR[zindx + i];
-            FACTZ[zpos] += (mu / sigma2) - (mu / sigmabg2);
+            FACTZ[zpos] += (mu / (sigma2 + sigmabg2) ) - (mu / sigmabg2);
         }
         for (i = 0; i < (nsnps*nsnps); i++) {
             S_VZ_[i] = BZINV[ (unsigned long)z*nsnps*nsnps + i ];

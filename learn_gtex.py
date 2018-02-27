@@ -71,13 +71,13 @@ def parse_args():
                         type=str,
                         dest='outdir',
                         metavar='DIR',
-                        help='name of the output directory for storing the model')
+                        help='Name of the output directory for storing the model')
 
     parser.add_argument('--split',
                         type=int,
                         dest='split',
                         metavar='SPLIT',
-                        help='split the genes in SPLIT batches.')
+                        help='Split the genes in SPLIT batches.')
 
     parser.add_argument('--section',
                         type=int,
@@ -90,8 +90,14 @@ def parse_args():
                         default=2,
                         dest='zmax',
                         metavar='ZMAX',
-                        help='maximum number of Zstates')
+                        help='Maximum number of Zstates')
 
+    parser.add_argument('--random',
+                        type=int,
+                        default=0,
+                        dest='random',
+                        metavar='RANDOM',
+                        help='Randomize genotype? Default: NO')
 
     opts = parser.parse_args()
     return opts
@@ -183,6 +189,10 @@ for i, gene in enumerate(genes):
             snpmask = pvalmask
         else:
             print ("Found {:d} SNPs for {:s}".format(len(cismask), gene.name))
+
+        # Randomize genotype, usefull for learning a random model
+        if opts.random > 0:
+            np.random.shuffle(predictor.T)
 
         # perform the analysis
         

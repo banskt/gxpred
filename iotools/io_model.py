@@ -37,10 +37,9 @@ class WriteModel:
         if not os.path.exists(self._dirpath):
             os.makedirs(self._dirpath)
         mode = 'w'
-        if os.path.exists(self._genefilename):
-            mode = 'a'
-        with open(self._genefilename, mode) as mfile:
-            mfile.write("{:25s}\t{:25s}\t{:7s}\t{:8s}\t{:8s}\t{:8s}\t{:8s}\t{:s}\n".format("Ensembl_ID", "Gene_Name", "Success", "Pi", "Mu", "Sigma", "Sigma_bg", "Sigma_tau"))
+        if not os.path.exists(self._genefilename):
+            with open(self._genefilename, mode) as mfile:
+                mfile.write("{:25s}\t{:25s}\t{:7s}\t{:8s}\t{:8s}\t{:8s}\t{:8s}\t{:s}\n".format("Ensembl_ID", "Gene_Name", "Success", "Pi", "Mu", "Sigma", "Sigma_bg", "Sigma_tau"))
         
 
     def snpfilename(self):
@@ -56,14 +55,6 @@ class WriteModel:
     def _write_gene(self, success, params):
         with open(self._genefilename, 'a') as mfile:
             mfile.write("{:25s}\t{:25s}\t{!r}\t{:8.5f}\t{:8.5f}\t{:8.5f}\t{:8.5f}\t{:8.5f}\n".format(self._setgene.ensembl_id, self._setgene.name, success, params[0], params[1], params[2], params[3], params[4]))
-
-    def write_params(self, gene, params):
-        paramsfilename = os.path.join(self._dirpath, "params.txt")
-        mode = 'w'
-        if os.path.exists(self._genefilename):
-            mode = 'a'
-        with open(paramsfilename, mode) as mfile:
-            mfile.write("\t".join(params)+"\n")
 
     def write_success_gene(self, gene, snps, zstates, params):
         self._setgene = gene

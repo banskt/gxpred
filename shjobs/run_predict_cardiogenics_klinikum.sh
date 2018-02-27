@@ -11,7 +11,7 @@ module load intel/mkl/64/2017/2.174
 
 # $ENV/bin/python $PREDICT --gt ${MODELPATH}/${GTFILE} --model ${MODELPATH}/gxpred_models --sample ${MODELPATH}/${SAMPLEFILE} --chr ${CHROM} --out $OUTDIR
 
-for CHROM in `seq 2 22`
+for CHROM in `seq 1 22`
 do
 
 	ENV='/usr/users/fsimone/myenv'

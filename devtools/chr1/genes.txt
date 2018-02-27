@@ -1,0 +1,4 @@
+Ensembl_ID               	Gene_Name                	Success	Pi      	Mu      	Sigma   	Sigma_bg	Sigma_tau
+ENSG00000183386.5        	FHL3                     	True	 0.00023	 0.00000	 0.00100	 0.03401	 0.87493
+ENSG00000183386.5        	FHL3                     	True	 0.00023	 0.00000	 0.00100	 0.03401	 0.87493
+ENSG00000183386.5        	FHL3                     	True	 0.00023	 0.00000	 0.00100	 0.03401	 0.87493

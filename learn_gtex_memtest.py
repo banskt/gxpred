@@ -205,7 +205,6 @@ for i, gene in enumerate(genes[opts.fromg:opts.tog]):
                                          exp   = list(zexp[j, :]) )
                 model_zstates.append(this_zstate)
             model.write_success_gene(gene, model_snps, model_zstates, res)
-            # model.write_params(gene, scaledparams)
         else:
             model.write_failed_gene(gene, np.zeros_like(init_params))
             print ("Failed optimization")

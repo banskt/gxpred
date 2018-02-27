@@ -14,13 +14,14 @@ module load intel/mkl/64/2017/2.174
 for CHROM in `seq 1 1`
 do
 
-	ENV='/usr/users/fsimone/myenv'
-	PREDICT='/usr/users/fsimone/gxpred/predict_gtex.py'
-	MODELPATH='/usr/users/fsimone/datasets/gtex'
+	HOME='/usr/users/fsimone'
+	ENV="${HOME}/myenv"
+	PREDICT="${HOME}/gxpred/predict_gtex.py"
+	MODELPATH="${HOME}/datasets/gtex"
 	# CHROM="1"
 	GTFILE="GTEx_450Indiv_genot_imput_info04_maf01_HWEp1E6_dbSNP135IDs_donorIDs_dosage_chr${CHROM}.gz"
-	LOGDIR="/usr/users/fsimone/datasets/gtex/predictions_klinikum"
-	OUTDIR="/usr/users/fsimone/datasets/gtex/predictions_klinikum/pred_chr${CHROM}"
+	LOGDIR="${MODELPATH}/predictions_klinikum"
+	OUTDIR="${MODELPATH}/predictions_klinikum/pred_chr${CHROM}"
 	LOG_SUFFIX="chr"$CHROM
 	SAMPLEFILE="donor_ids.fam"
 	RUNTIME="12:00"

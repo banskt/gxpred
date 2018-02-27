@@ -27,11 +27,12 @@ class ReadOxford:
     _nsample = 0
 
 
-    def __init__(self, gtfile, samplefile, chrom, dataset):
+    def __init__(self, gtfile, samplefile, chrom, dataset, nlocilimit=-1):
         self._chrom = chrom
         self._gtfile = gtfile
         self._samplefile = samplefile
         self._dataset = dataset
+        self._nlocilimit = nlocilimit
         self._read_genotypes()
 
         
@@ -127,6 +128,9 @@ class ReadOxford:
 
                 allsnps.append(this_snp)
                 dosage.append(snp_dosage)
+                if self._nlocilimit > 0:
+                    if self._nloci > self._nlocilimit:
+                        break
         return allsnps, dosage
 
     def _read_gtex(self):
@@ -159,8 +163,9 @@ class ReadOxford:
                                        maf        = maf)
                 allsnps.append(this_snp)
                 dosage.append(snp_dosage)
-                # if self._nloci > 100000:
-                #    break
+                if self._nlocilimit > 0:
+                    if self._nloci > self._nlocilimit:
+                        break
         return allsnps, dosage
 
     def _read_genotypes(self):
