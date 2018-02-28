@@ -89,10 +89,10 @@ gt = gtutils.normalize(snps, genotype)
 pdb.set_trace()
 
 # Annotation
-gene_info = readgtf.gencode_v12(opts.gtfpath, include_chrom = opts.chrom)
+gene_info = readgtf.gencode_v12(opts.gtfpath, include_chrom = opts.chrom, trim=False)
 
 # Gene Expression
-rpkm = ReadRPKM(opts.rpkmpath)
+rpkm = ReadRPKM(opts.rpkmpath, "geuvadis")
 expression = rpkm.expression
 expr_donors = rpkm.donor_ids
 gene_names = rpkm.gene_names
@@ -105,9 +105,7 @@ genes, indices = mfunc.select_genes(gene_info, gene_names)
 min_snps = 200
 pval_cutoff = 0.001
 window = 1000000
-cmax = 2
-init_params = np.array(opts.params)
-init_params[4] = 1 / init_params[4] / init_params[4]
+cmax = 1
 
 model = WriteModel(opts.outdir, opts.chrom)
 
@@ -115,7 +113,7 @@ for i, gene in enumerate(genes[:5]):
     k = indices[i]
 
     # select only the cis-SNPs
-    pdb.set_trace()
+    #pdb.set_trace()
     cismask = mfunc.select_snps(gene, snps, window)
     if len(cismask) > 0:
         target = expression[k, exprmask]
@@ -133,10 +131,24 @@ for i, gene in enumerate(genes[:5]):
         else:
             print ("Found {:d} SNPs for {:s}".format(len(cismask), gene.name))
 
-        # perform the analysis
-        
+
+        # read the features
+        # TO-DO: call another module for getting the features
+        # for now, it contains only a list of 1's
+        features = np.ones((predictor.shape[0], 1))
+        nfeat = features.shape[1]
+
+        # Create initial parameters // scale gamma_0 (it will not be scaled again)
+        init_params = np.zeros(nfeat + 4)
+        init_params[0] = - np.log((1 / opts.params[0]) - 1)
+        init_params[nfeat + 0] = opts.params[1] # mu
+        init_params[nfeat + 1] = opts.params[2] # sigma
+        init_params[nfeat + 2] = opts.params[3] # sigmabg
+        init_params[nfeat + 3] = 1 / opts.params[4] / opts.params[4] # tau
+
+        # perform the analysis 
         print ("Starting first optimization ==============")
-        emp_bayes = EmpiricalBayes(predictor, target, 1, init_params, method="new")
+        emp_bayes = EmpiricalBayes(predictor, target, features, 1, init_params, method="new")
         emp_bayes.fit()
         if cmax > 1:
             if emp_bayes.success:
@@ -145,19 +157,16 @@ for i, gene in enumerate(genes[:5]):
             else:
                 res = init_params
                 print ("Starting second optimization from initial parameters ================")
-            emp_bayes = EmpiricalBayes(predictor, target, cmax, res, method="new")
+            emp_bayes = EmpiricalBayes(predictor, target, features, cmax, res, method="new")
             emp_bayes.fit()
             
 
         if emp_bayes.success:
             res = emp_bayes.params
-            res[4] = 1 / np.sqrt(res[4])
-            print('\n'.join(['{:g}'.format(x) for x in list(res)]))
-
             model_snps = [snps[x] for x in snpmask]
             model_zstates = list()
             scaledparams = hyperparameters.scale(emp_bayes.params)
-            zprob, zexp = logmarglik.model_exp(scaledparams, predictor, target, emp_bayes.zstates)
+            zprob, zexp = logmarglik.model_exp(scaledparams, predictor, target, features, emp_bayes.zstates)
             for j, z in enumerate(emp_bayes.zstates):
                 this_zstate = ZstateInfo(state = z,
                                          prob  = zprob[j],

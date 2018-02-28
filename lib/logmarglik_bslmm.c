@@ -278,7 +278,7 @@ binv_update ( int nsnps, int zpos, double mod, double* B, double* Drow, double* 
  */
     bool
 get_zcomps ( int nsnps, int nsample, int zlen, 
-             double pi, double mu, double sigma, double sigmabg, double tau,
+             double* PI, double mu, double sigma, double sigmabg, double tau,
              int* ZARR, int* ZNORM, 
              double* GT, double* GX,
              double* ZCOMPS, double* BZINV, double* SZINV, bool debug )
@@ -295,6 +295,7 @@ get_zcomps ( int nsnps, int nsample, int zlen,
     double  nterm;
     double  mod_denom, mod;
     double  log_probz;
+    double  log_probz0;
     double  log_normz;
     bool    success;
 
@@ -360,6 +361,17 @@ get_zcomps ( int nsnps, int nsample, int zlen,
         BZINV[i] = B_INV[i];
     }
 
+    log_probz0 = 0.0;
+    for (i = 0; i < nsnps; i++) {
+        if ( PI[i] < 1.0 ) {
+            log_probz0 += log(1 - PI[i]);
+        } else {
+            success = false;
+            printf ( "Error. Pi value reached %f. Aborting...\n", PI[i] );
+            goto cleanup_zcomps;
+        }
+    }
+
     zindx = 0;
     for (z = 0; z < zlen; z++) {
   
@@ -372,7 +384,8 @@ get_zcomps ( int nsnps, int nsample, int zlen,
             GX_MZ[i] = GX[i];
         }
         logBZdet = logB0det;
-        
+
+        log_probz = log_probz0;
         for (i = 0; i < nz; i++) {
             zpos = ZARR[zindx + i];
             mod_denom = 1 + hdiff * B_INV[ zpos*nsnps + zpos ];
@@ -382,9 +395,14 @@ get_zcomps ( int nsnps, int nsample, int zlen,
             for (j = 0; j < nsample; j++) {
                 GX_MZ[j] -= mu * GT[ zpos*nsample + j ];
             }
+            if ( PI[zpos] > 0.0 ) {
+                log_probz += log(PI[zpos] / (1 - PI[zpos]));
+            } else {
+                success = false;
+                printf ( "Error. Pi value reached %f. Aborting...\n", PI[i] );
+                goto cleanup_zcomps;
+            }
         }
-        
-        log_probz = nz * log(pi) + (nsnps - nz) * log(1 - pi);
         
 //      No need to initialize S_INV, because it will be overwritten.
 //      DUM3 is a nsnps-by-nsample matrix which is only used as a scratch
@@ -445,10 +463,10 @@ cleanup_zcomps_B_INV:
  * =====================================================================================
  */
     void
-get_grad ( int nsnps, int nsample, int zlen, 
-             double pi, double mu, double sigma, double sigmabg, double tau,
+get_grad ( int nsnps, int nsample, int zlen, int nfeat,
+             double* PI, double mu, double sigma, double sigmabg, double tau,
              int* ZARR, int* ZNORM, 
-             double* GT, double* GX,
+             double* GT, double* GX, double* FEAT,
              double* ZCOMPS, double* BZINV, double* SZINV, double* GRAD )
 {
     int i, j, k, z;
@@ -463,9 +481,10 @@ get_grad ( int nsnps, int nsample, int zlen,
     double  sigma_by_sigmaz4;
     double  sigmabg_by_sigmaz4;
 
-    double  picomp, mucomp, sigmacomp, sigmabgcomp, taucomp;
-    double  pi_grad, mu_grad, sigma_grad, sigmabg_grad, tau_grad;
+    double  mucomp, sigmacomp, sigmabgcomp, taucomp;
+    double  mu_grad, sigma_grad, sigmabg_grad, tau_grad;
     double  dlogdetS_dsigma, dlogdetS_dsigmabg, dlogdetS_dtau;
+    double  innersumpi;
     
     double* INVSIGMAZ4;
     double* INVSIGMAZ4_0;
@@ -481,14 +500,16 @@ get_grad ( int nsnps, int nsample, int zlen,
     double* DUM1;
     double* DUM3;
     double* DUM5;
+    double* PICOMP;
 
-    B_INV = (double *)mkl_malloc( nsnps   * nsnps   * sizeof( double ), 64 );
-    S_INV = (double *)mkl_malloc( nsample * nsample * sizeof( double ), 64 );
-    GX_MZ = (double *)mkl_malloc(           nsample * sizeof( double ), 64 );
-    ZT_GT = (double *)mkl_malloc(           nsample * sizeof( double ), 64 );
-    DUM1  = (double *)mkl_malloc(           nsample * sizeof( double ), 64 );
-    DUM3  = (double *)mkl_malloc( nsnps   * nsample * sizeof( double ), 64 );
-    DUM5  = (double *)mkl_malloc( nsnps   * nsnps   * sizeof( double ), 64 );
+    B_INV  = (double *)mkl_malloc( nsnps   * nsnps   * sizeof( double ), 64 );
+    S_INV  = (double *)mkl_malloc( nsample * nsample * sizeof( double ), 64 );
+    GX_MZ  = (double *)mkl_malloc(           nsample * sizeof( double ), 64 );
+    ZT_GT  = (double *)mkl_malloc(           nsample * sizeof( double ), 64 );
+    DUM1   = (double *)mkl_malloc(           nsample * sizeof( double ), 64 );
+    DUM3   = (double *)mkl_malloc( nsnps   * nsample * sizeof( double ), 64 );
+    DUM5   = (double *)mkl_malloc( nsnps   * nsnps   * sizeof( double ), 64 );
+    PICOMP = (double *)mkl_malloc( nfeat             * sizeof( double ), 64 );
 
     DBINV_DSIGMA   = (double *)mkl_malloc( nsnps   * nsnps   * sizeof( double ), 64 );
     DSINV_DSIGMA   = (double *)mkl_malloc( nsample * nsample * sizeof( double ), 64 );
@@ -500,7 +521,7 @@ get_grad ( int nsnps, int nsample, int zlen,
 
     if (B_INV == NULL || S_INV == NULL || GX_MZ == NULL || ZT_GT == NULL || 
             DBINV_DSIGMA == NULL || DSINV_DSIGMA == NULL || DBINV_DSIGMABG == NULL || DSINV_DSIGMABG == NULL || DSINV_DTAU == NULL ||
-            DUM1 == NULL || DUM3 == NULL || INVSIGMAZ4 == NULL || INVSIGMAZ4_0 == NULL || DUM5 == NULL) {
+            DUM1 == NULL || DUM3 == NULL || INVSIGMAZ4 == NULL || INVSIGMAZ4_0 == NULL || DUM5 == NULL || PICOMP == NULL) {
         printf( "C Error: Can't allocate memory for z-specific Bz / Sz. Aborting... \n");
         mkl_free(B_INV);
         mkl_free(S_INV);
@@ -516,6 +537,7 @@ get_grad ( int nsnps, int nsample, int zlen,
         mkl_free(DSINV_DTAU);
         mkl_free(INVSIGMAZ4);
         mkl_free(INVSIGMAZ4_0);
+        mkl_free(PICOMP);
         exit(0);
     }
     else {
@@ -528,7 +550,6 @@ get_grad ( int nsnps, int nsample, int zlen,
     sigmabg4 = sigmabg2 * sigmabg2;
     tau2 = tau * tau;
 
-    pi_grad = 0.0;
     mu_grad = 0.0;
     sigma_grad = 0.0;
     sigmabg_grad = 0.0;
@@ -542,6 +563,16 @@ get_grad ( int nsnps, int nsample, int zlen,
         INVSIGMAZ4_0[i*nsnps+i] = (-2 * sigmabg) / sigmabg4;
     }
 
+    for (k = 0; k < nfeat; k++) {
+        PICOMP[k] = 0.0;
+        GRAD[k] = 0.0;
+    }
+
+    for (i = 0; i < nsnps; ++i) {
+        for (k = 0; k < nfeat; k++) {
+            PICOMP[k] += - PI[i] * FEAT[ i * nfeat + k ];
+        }
+    }
 
     zindx = 0;
     for ( z = 0; z < zlen; z++ ) {
@@ -574,14 +605,18 @@ get_grad ( int nsnps, int nsample, int zlen,
             GX_MZ[i] = GX[i];
             ZT_GT[i] = 0.0;
         }
- 
-        picomp = (nz / pi) - ((nsnps - nz) / (1 - pi));
-        pi_grad += ZCOMPS[z] * picomp;
 
-//        printf ("Number of causal SNPS in zstate %d: %d. ZCOMPS = %f \n", z, nz, ZCOMPS[z]);
+        for (k = 0; k < nfeat; k++) {
+            innersumpi = PICOMP[k];
+            for (i = 0; i < nz; i++) {
+                zpos = ZARR[zindx + i];
+                innersumpi += FEAT[ zpos * nfeat + k ];
+            }
+            GRAD[k] += ZCOMPS[z] * innersumpi;
+        }
+
         for (i = 0; i < nz; i++) {
             zpos = ZARR[zindx + i];
-//            printf("Updating GX_MZ and ZT_GT for zpos = %d\n", zpos);
             for (j = 0; j < nsample; j++) {
                 GX_MZ[j] -= mu * GT[ zpos*nsample + j ];
                 ZT_GT[j] += GT[ zpos*nsample + j ];
@@ -624,11 +659,10 @@ get_grad ( int nsnps, int nsample, int zlen,
         zindx += nz;
     }
 
-    GRAD[0] = pi_grad;
-    GRAD[1] = mu_grad;
-    GRAD[2] = sigma_grad;
-    GRAD[3] = sigmabg_grad;
-    GRAD[4] = tau_grad;
+    GRAD[ nfeat + 0 ] = mu_grad;
+    GRAD[ nfeat + 1 ] = sigma_grad;
+    GRAD[ nfeat + 2 ] = sigmabg_grad;
+    GRAD[ nfeat + 3 ] = tau_grad;
 
     mkl_free(B_INV);
     mkl_free(S_INV);
@@ -637,6 +671,7 @@ get_grad ( int nsnps, int nsample, int zlen,
     mkl_free(DUM1);
     mkl_free(DUM3);
     mkl_free(DUM5);
+    mkl_free(PICOMP);
     mkl_free(INVSIGMAZ4);
     mkl_free(INVSIGMAZ4_0);
     mkl_free(DBINV_DSIGMA);
@@ -651,15 +686,15 @@ get_grad ( int nsnps, int nsample, int zlen,
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  get_zexp
- *  Description:  Calculate the mean of P(v_tg | x, y, theta, tau) Eq 3.13
- *                It is denoted as M_vz in the theory.
- *                For every z-state, M_vz is a vector of size I.
+ *  Description:  Calculate m_vz (eq. 3.22)
+ *                It is the mean of P(v_tg | x, y, theta, tau) Eq 3.13
+ *                For every z-state, m_vz is a vector of size I.
  *                The result is stored in a single array ZEXP of size nz * I.
  * =====================================================================================
  */
     void
 get_zexp ( int nsnps, int nsample, int zlen, 
-             double pi, double mu, double sigma, double sigmabg, double tau,
+             double mu, double sigma, double sigmabg, double tau,
              int* ZARR, int* ZNORM, 
              double* GT, double* GX,
              double* BZINV, double* ZEXP )
@@ -700,7 +735,7 @@ get_zexp ( int nsnps, int nsample, int zlen,
     }
     mat_vec ( nsnps, nsample, tau, GT, GX, GT_GX );
     for ( i = 0; i < nsnps; i++ ) {
-        FACT0[i] = GT_GX[i] + (mu / sigmabg2);
+        FACT0[i] = GT_GX[i];// + (mu / sigmabg2);
     }
 
     zindx = 0;
@@ -713,7 +748,7 @@ get_zexp ( int nsnps, int nsample, int zlen,
         }
         for ( i = 0; i < nz; i++ ) {
             zpos = ZARR[zindx + i];
-            FACTZ[zpos] += (mu / (sigma2 + sigmabg2) ) - (mu / sigmabg2);
+            FACTZ[zpos] += (mu / (sigma2 + sigmabg2) );// - (mu / sigmabg2);
         }
         for (i = 0; i < (nsnps*nsnps); i++) {
             S_VZ_[i] = BZINV[ (unsigned long)z*nsnps*nsnps + i ];
@@ -747,7 +782,8 @@ get_zexp ( int nsnps, int nsample, int zlen,
 logmarglik ( int     nsnps,
              int     nsample,
              int     zlen,
-             double  pi,
+             int     nfeat,
+             double* PI,
              double  mu,
              double  sigma,
              double  sigmabg,
@@ -758,6 +794,7 @@ logmarglik ( int     nsnps,
              int*    ZNORM,
              double* GT,
              double* GX,
+             double* FEAT,
              double* ZCOMPS,
              double* GRAD,
              double* ZEXP,
@@ -780,6 +817,7 @@ logmarglik ( int     nsnps,
 
     if (debug) {
         printf ("%d zstates, %d SNPs and %d samples\n", zlen, nsnps, nsample);
+        printf ("No. of features: %d", nfeat);
         printf ("Size of double: %lu bytes\n", sizeof( double ));
         printf ("Size of float:  %lu bytes\n", sizeof( float ));
         printf ("Size required:  %f Gb\n", (double)((unsigned long)zlen * nsnps   * nsnps * sizeof(double)) / (1024 * 1024 * 1024));
@@ -791,7 +829,7 @@ logmarglik ( int     nsnps,
     SZINV = (double *)mkl_malloc( (unsigned long)zlen * nsample * nsample * sizeof( double ), 64 );
     if (SZINV == NULL) {success = false; goto cleanup_main_SZINV;}
     
-    success = get_zcomps ( nsnps, nsample, zlen, pi, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, ZCOMPS, BZINV, SZINV, debug );
+    success = get_zcomps ( nsnps, nsample, zlen, PI, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, ZCOMPS, BZINV, SZINV, debug );
     if (debug) {
         printf ( "ZCOMPS calculated.\n" );
     }
@@ -829,14 +867,14 @@ logmarglik ( int     nsnps,
     }
         
     if (get_gradient) {
-        get_grad ( nsnps, nsample, zlen, pi, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, ZCOMPS, BZINV, SZINV, GRAD );
+        get_grad ( nsnps, nsample, zlen, nfeat, PI, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, FEAT, ZCOMPS, BZINV, SZINV, GRAD );
     }
     if (debug) {
         printf ( "Gradients calculated.\n" );
     }
 
     if (get_Mvz) {
-        get_zexp ( nsnps, nsample, zlen, pi, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, BZINV, ZEXP );
+        get_zexp ( nsnps, nsample, zlen, mu, sigma, sigmabg, tau, ZARR, ZNORM, GT, GX, BZINV, ZEXP );
     }
     if (debug) {
         printf ( "Everything done upto cleanup.\n" );

@@ -16,10 +16,11 @@ class EmpiricalBayes:
     _global_zstates = list()
     _update_zstates = True
 
-    def __init__(self, genotype, phenotype, cmax, params, ztarget = 0.98, method = "old"):
+    def __init__(self, genotype, phenotype, features, cmax, params, ztarget = 0.98, method = "old"):
 
         self._genotype = genotype
         self._phenotype = phenotype
+        self._features = features
         self._cmax = cmax
         self._params = hyperparameters.scale(params)
         self._ztarget = ztarget
@@ -27,6 +28,8 @@ class EmpiricalBayes:
 
         self._nsnps = genotype.shape[0]
         self._nsample = genotype.shape[1]
+        self._nfeat = features.shape[1]
+        self._nhyp = features.shape[1] + 4
 
 
     @property
@@ -46,12 +49,8 @@ class EmpiricalBayes:
 
     def fit(self):
         scaledparams = self._params
-
-        bounds = [[None, None] for i in range(5)]
-        bounds[1] = [scaledparams[1], scaledparams[1]]
-        #bounds[2] = [None, 2]
-        #bounds[3] = [None, 2]
-        #bounds[4] = [None, 20]
+        bounds = [[None, None] for i in range(self._nhyp)]
+        bounds[self._nfeat] = [scaledparams[self._nfeat], scaledparams[self._nfeat]] # bounds mu to zero
 
         self._callback_zstates(scaledparams)
 
@@ -75,7 +74,7 @@ class EmpiricalBayes:
 
 
     def _log_marginal_likelihood(self, scaledparams):
-        success, lml, der = logmarglik.func_grad(scaledparams, self._genotype, self._phenotype, self._global_zstates)
+        success, lml, der = logmarglik.func_grad(scaledparams, self._genotype, self._phenotype, self._features, self._global_zstates)
         if not success:
             raise CostFunctionNumericalError()
         return lml, der
@@ -84,8 +83,8 @@ class EmpiricalBayes:
     def _callback_zstates(self, scaledparams):
         if self._update_zstates:
             if   self._method == "old":
-                self._global_zstates = zs_old.create(scaledparams, self._genotype, self._phenotype, self._cmax, self._nsnps, self._ztarget)
+                self._global_zstates = zs_old.create(scaledparams, self._genotype, self._phenotype, self._features, self._cmax, self._nsnps, self._ztarget)
             elif self._method == "new":
-                self._global_zstates =     zs.create(scaledparams, self._genotype, self._phenotype, self._cmax, self._nsnps, self._ztarget)
+                self._global_zstates =     zs.create(scaledparams, self._genotype, self._phenotype, self._features, self._cmax, self._nsnps, self._ztarget)
             elif self._method == "basic":
                 self._global_zstates = [[]] + [[i] for i in range(self._nsnps)]

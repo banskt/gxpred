@@ -5,7 +5,7 @@ import os
 import ctypes
 from utils import hyperparameters
 
-def czcompgrad(params, x, y, zstates, get_grad=True, get_exp=False):
+def czcompgrad(params, x, y, features, zstates, get_grad=True, get_exp=False):
     ''' Interface with margloglik.so,
         an efficient C code for calculating log marginal likelihood and gradient.
     '''
@@ -19,7 +19,8 @@ def czcompgrad(params, x, y, zstates, get_grad=True, get_exp=False):
     czcomps.argtypes = [ctypes.c_int,
                         ctypes.c_int,
                         ctypes.c_int,
-                        ctypes.c_double,
+                        ctypes.c_int,
+                        np.ctypeslib.ndpointer(ctypes.c_double, ndim=1, flags='C_CONTIGUOUS, ALIGNED'),
                         ctypes.c_double,
                         ctypes.c_double,
                         ctypes.c_double,
@@ -28,6 +29,7 @@ def czcompgrad(params, x, y, zstates, get_grad=True, get_exp=False):
                         ctypes.c_bool,
                         np.ctypeslib.ndpointer(ctypes.c_int, flags='C_CONTIGUOUS, ALIGNED'),
                         np.ctypeslib.ndpointer(ctypes.c_int, flags='C_CONTIGUOUS, ALIGNED'),
+                        np.ctypeslib.ndpointer(ctypes.c_double, ndim=1, flags='C_CONTIGUOUS, ALIGNED'),
                         np.ctypeslib.ndpointer(ctypes.c_double, ndim=1, flags='C_CONTIGUOUS, ALIGNED'),
                         np.ctypeslib.ndpointer(ctypes.c_double, ndim=1, flags='C_CONTIGUOUS, ALIGNED'),
                         np.ctypeslib.ndpointer(ctypes.c_double, ndim=1, flags='C_CONTIGUOUS, ALIGNED'),
@@ -35,44 +37,52 @@ def czcompgrad(params, x, y, zstates, get_grad=True, get_exp=False):
                         np.ctypeslib.ndpointer(ctypes.c_double, ndim=1, flags='C_CONTIGUOUS, ALIGNED'),
                         np.ctypeslib.ndpointer(ctypes.c_double, ndim=1, flags='C_CONTIGUOUS, ALIGNED')
                        ]
-    
-    nvar = x.shape[0]
+
+    nsnps = x.shape[0]
     nsample = x.shape[1]
+    nfeat = features.shape[1]
+    nhyp = nfeat + 4
+    pi_arr = 1 / (1 + np.exp(-np.einsum('k, ik -> i', params[:nfeat], features)))
+    mu =      params[ nfeat + 0 ]
+    sigma =   params[ nfeat + 1 ]
+    sigmabg = params[ nfeat + 2 ]
+    tau =     params[ nfeat + 3 ]
+    print(params[0], mu, sigma, sigmabg, tau)
     
     zlen = len(zstates)
     zarr = np.array([item for sublist in zstates for item in sublist], dtype=np.int32)
     znorm = np.array([len(sublist) for sublist in zstates], dtype=np.int32)
     
     zcomps = np.zeros(zlen)
-    grad = np.zeros(5)
-    zexp = np.zeros(zlen * nvar)
+    grad = np.zeros( nhyp )
+    zexp = np.zeros(zlen * nsnps)
     logmarglik = np.zeros(1)
     
-    success = czcomps(nvar, nsample, zlen, params[0], params[1], params[2], params[3], params[4],
-                         get_grad, get_exp, zarr, znorm, x.reshape(-1,), y.reshape(-1,), zcomps, grad, zexp, logmarglik)
+    success = czcomps(nsnps, nsample, zlen, nfeat, pi_arr, mu, sigma, sigmabg, tau,
+                         get_grad, get_exp, zarr, znorm, x.reshape(-1,), y.reshape(-1,), features.reshape(-1,), zcomps, grad, zexp, logmarglik)
     if not (success):
         print ("Python Error: C library could not compute z-components. Check C errors above.")
     
     return success, logmarglik[0], zcomps, grad, zexp
 
-def func_grad(scaledparams, x, y, zstates):
+def func_grad(scaledparams, x, y, features, zstates):
     params = hyperparameters.descale(scaledparams)
-    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, zstates, get_grad=True)
+    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, features, zstates, get_grad=True)
     grad = hyperparameters.gradscale(params, grad)
     return success, -logmarglik, -grad
 
-def func(scaledparams, x, y, zstates):
+def func(scaledparams, x, y, features, zstates):
     params = hyperparameters.descale(scaledparams)
-    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, zstates, get_grad=False)
+    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, features, zstates, get_grad=False)
     return -logmarglik
 
-def prob_comps(scaledparams, x, y, zstates):
+def prob_comps(scaledparams, x, y, features, zstates):
     params = hyperparameters.descale(scaledparams)
-    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, zstates, get_grad=False)
+    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, features, zstates, get_grad=False)
     return zprob
 
-def model_exp(scaledparams, x, y, zstates):
+def model_exp(scaledparams, x, y, features, zstates):
     params = hyperparameters.descale(scaledparams)
-    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, zstates, get_grad=False, get_exp=True)
+    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, features, zstates, get_grad=False, get_exp=True)
     zexp = zexp.reshape(len(zstates), x.shape[0])
     return zprob, zexp

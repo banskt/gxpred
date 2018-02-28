@@ -1,0 +1,2 @@
+Ensembl_ID               	Gene_Name                	Success	Gamma0  	Mu      	Sigma   	Sigma_bg	Sigma_tau
+ENSG00000139547.6        	RDH16                    	True	-40.24411	 0.00000	 0.01862	 0.01168	 1.02610

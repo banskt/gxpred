@@ -62,6 +62,8 @@ class ReadRPKM:
         self._read_gene_expression()
         if self._dataset == "cardiogenics":
             self._read_gene_names()
+        if self._dataset == "geuvadis":
+            self._read_gene_names()
 
     def _read_cardiogenics(self):
         expr_list = list()
@@ -91,6 +93,19 @@ class ReadRPKM:
         self._genenames = gene_list
         return expr_list, donor_list
 
+    def _read_geuvadis(self):
+        expr_list = list()
+        donor_list = list()
+        with open(self._rpkmfile) as mfile:
+            for line in mfile:
+                linesplit = line.strip().split()
+                donor = linesplit[1].strip()
+                expr = np.array([float(x) for x in linesplit[2:]])
+                expr_list.append(expr)
+                donor_list.append(donor)
+        expr_list = np.array(expr_list)
+        return expr_list, donor_list
+
 
     def _read_gene_expression(self):
         expr_list = list()
@@ -100,6 +115,8 @@ class ReadRPKM:
                 expr_list, donor_list = self._read_cardiogenics()
             if self._dataset == "gtex":
                 expr_list, donor_list = self._read_gtex()
+            if self._dataset == "geuvadis":
+                expr_list, donor_list = self._read_geuvadis()
         except IOError as err:
             raise IOError("{:s}: {:s}".format(self._rpkmfile, err.strerror))
         expression = np.array(expr_list).transpose()

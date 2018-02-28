@@ -39,7 +39,7 @@ class WriteModel:
         mode = 'w'
         if not os.path.exists(self._genefilename):
             with open(self._genefilename, mode) as mfile:
-                mfile.write("{:25s}\t{:25s}\t{:7s}\t{:8s}\t{:8s}\t{:8s}\t{:8s}\t{:s}\n".format("Ensembl_ID", "Gene_Name", "Success", "Pi", "Mu", "Sigma", "Sigma_bg", "Sigma_tau"))
+                mfile.write("{:25s}\t{:25s}\t{:7s}\t{:8s}\t{:8s}\t{:8s}\t{:8s}\t{:s}\n".format("Ensembl_ID", "Gene_Name", "Success", "Gamma0", "Mu", "Sigma", "Sigma_bg", "Sigma_tau"))
         
 
     def snpfilename(self):
@@ -53,8 +53,17 @@ class WriteModel:
 
 
     def _write_gene(self, success, params):
+        nfeat = params.shape[0] - 4
         with open(self._genefilename, 'a') as mfile:
-            mfile.write("{:25s}\t{:25s}\t{!r}\t{:8.5f}\t{:8.5f}\t{:8.5f}\t{:8.5f}\t{:8.5f}\n".format(self._setgene.ensembl_id, self._setgene.name, success, params[0], params[1], params[2], params[3], params[4]))
+            mfile.write("{:25s}\t{:25s}\t{!r}\t{:8.5f}\t{:8.5f}\t{:8.5f}\t{:8.5f}\t{:8.5f}\n".format(self._setgene.ensembl_id, 
+                                                                                                     self._setgene.name,
+                                                                                                     success,
+                                                                                                     params[0],
+                                                                                                     params[nfeat + 0], 
+                                                                                                     params[nfeat + 1], 
+                                                                                                     params[nfeat + 2], 
+                                                                                                     params[nfeat + 3]
+                                                                                                    ))
 
     def write_success_gene(self, gene, snps, zstates, params):
         self._setgene = gene

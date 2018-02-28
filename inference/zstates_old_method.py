@@ -5,7 +5,7 @@ import os
 import ctypes
 from inference import logmarglik
 
-def create(scaledparams, x, y, cmax, nvar, target):
+def create(scaledparams, x, y, features, cmax, nvar, target):
 
     _path = os.path.dirname(__file__)
     lib = np.ctypeslib.load_library('../lib/zstates.so', _path)
@@ -28,7 +28,7 @@ def create(scaledparams, x, y, cmax, nvar, target):
     while norm < cmax:
 
         # Stop iteration if sum(new posterior) is < 0.02 times sum(old posterior)
-        posterior   = logmarglik.prob_comps(scaledparams, x, y, zstates)
+        posterior   = logmarglik.prob_comps(scaledparams, x, y, features, zstates)
         prob        = np.array(posterior[-len(newk):])
         old_prob    = np.array(posterior[:len(oldk)])
         probsum     = np.sum(prob)
@@ -82,6 +82,6 @@ def create(scaledparams, x, y, cmax, nvar, target):
 
 
             zstates += newk
-            posterior   = logmarglik.prob_comps(scaledparams, x, y, zstates)
+            posterior   = logmarglik.prob_comps(scaledparams, x, y, features, zstates)
 
     return zstates
