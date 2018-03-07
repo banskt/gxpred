@@ -645,7 +645,7 @@ get_zexp ( int nsnps, int nsample, int zlen,
     }
     mat_vec ( nsnps, nsample, tau, GT, GX, GT_GX );
     for ( i = 0; i < nsnps; i++ ) {
-        FACT0[i] = GT_GX[i]; // + (mu / sigmabg2);
+        FACT0[i] = GT_GX[i] + (mu / sigmabg2);
     }
 
     zindx = 0;
@@ -658,7 +658,7 @@ get_zexp ( int nsnps, int nsample, int zlen,
         }
         for ( i = 0; i < nz; i++ ) {
             zpos = ZARR[zindx + i];
-            FACTZ[zpos] += (mu / sigma2); // - (mu / sigmabg2);
+            FACTZ[zpos] += (mu / sigma2) - (mu / sigmabg2);
         }
         for (i = 0; i < (nsnps*nsnps); i++) {
             S_VZ_[i] = BZINV[ (unsigned long)z*nsnps*nsnps + i ];

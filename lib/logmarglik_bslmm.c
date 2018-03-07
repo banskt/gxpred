@@ -304,6 +304,8 @@ get_zcomps ( int nsnps, int nsample, int zlen,
 
     double  *DUM1, *DUM2, *DUM3, *DUM4;
 
+    debug = false;
+
     B_INV = (double *)mkl_malloc( nsnps   * nsnps   * sizeof( double ), 64 );
     if (B_INV == NULL) {success = false; goto cleanup_zcomps_B_INV;}
 
@@ -349,6 +351,9 @@ get_zcomps ( int nsnps, int nsample, int zlen,
     for (i = 0; i < nsnps; i++) {
         B_INV[ i*nsnps + i ] += 1 / sigmabg2;
     }
+
+    printf("Values out: %f, %f, %f, %f, %f \n", pi, mu, sigma, sigmabg, tau);
+
 
     success = logdet_inverse_of_mat(nsnps, B_INV, tau, sigmabg2, &logB0det);
 
@@ -700,7 +705,7 @@ get_zexp ( int nsnps, int nsample, int zlen,
     }
     mat_vec ( nsnps, nsample, tau, GT, GX, GT_GX );
     for ( i = 0; i < nsnps; i++ ) {
-        FACT0[i] = GT_GX[i] + (mu / sigmabg2);
+        FACT0[i] = GT_GX[i]; // + (mu / sigmabg2);
     }
 
     zindx = 0;
@@ -713,7 +718,7 @@ get_zexp ( int nsnps, int nsample, int zlen,
         }
         for ( i = 0; i < nz; i++ ) {
             zpos = ZARR[zindx + i];
-            FACTZ[zpos] += (mu / (sigma2 + sigmabg2) ) - (mu / sigmabg2);
+            FACTZ[zpos] += (mu / (sigma2 + sigmabg2) ); // - (mu / sigmabg2);
         }
         for (i = 0; i < (nsnps*nsnps); i++) {
             S_VZ_[i] = BZINV[ (unsigned long)z*nsnps*nsnps + i ];
@@ -773,6 +778,8 @@ logmarglik ( int     nsnps,
     double* SZINV; //for each zstate S  is a matrix of size N x N
 
     debug = false;
+
+    //printf( "Values in: %f, %f, %f, %f, %f \n", pi, mu, sigma, sigmabg, tau);
 
     //if (zlen > 10000) {
     //    debug = true;

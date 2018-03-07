@@ -4,7 +4,10 @@ LIBFLAGS := -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_ilp64.a ${MKLR
 # SHAREFLAGS := -O3 -shared -fPIC
 SHAREFLAGS := -O3 -shared -fPIC
 
-all: logmarglik.so logmarglik_bslmm.so zstates.so linear_regression.so
+all: logmarglik_original.so logmarglik.so logmarglik_bslmm.so zstates.so linear_regression.so
+
+logmarglik_original.so: logmarglik_original.c
+	$(CC) $< $(LIBFLAGS) $(SHAREFLAGS) -o $@
 
 logmarglik.so: logmarglik.c
 	$(CC) $< $(LIBFLAGS) $(SHAREFLAGS) -o $@
@@ -19,4 +22,4 @@ linear_regression.so: linear_regression.c
 	$(CC) $< $(SHAREFLAGS) -o $@
 
 clean:
-	rm -rf zstates.so logmarglik.so linear_regression.so logmarglik_bslmm.so
+	rm -rf zstates.so logmarglik.so linear_regression.so logmarglik_bslmm.so logmarglik_original.so

@@ -37,7 +37,7 @@ def prune(newz, prob, oldprobsum, target):
         
     return leadk
 
-def create(scaledparams, x, y, cmax, nvar, target):
+def create(scaledparams, x, y, cmax, nvar, target, prior):
 
     _path = os.path.dirname(__file__)
     lib = np.ctypeslib.load_library('../lib/zstates.so', _path)
@@ -55,19 +55,19 @@ def create(scaledparams, x, y, cmax, nvar, target):
     newk = [[i] for i in range(nvar)]
 
     # Calculate the posterior probability of the zstates
-    posterior   = lml.prob_comps(scaledparams, x, y, zstates + newk)
+    posterior   = lml.prob_comps(scaledparams, x, y, zstates + newk, prior)
     prob        = np.array(posterior[-len(newk):])
     old_prob    = np.array(posterior[:len(oldk)])
     probsum     = np.sum(prob)
     old_probsum = np.sum(old_prob)
 
     # Add the ones required
-    print(old_probsum, target)
+    print("Old probsum: {:f}, target: {:f}".format(old_probsum, target))
     selk = prune(newk, prob, old_probsum, target)
     if len(selk) > 0:
         zstates += selk
 
-    print("Working with "+str(len(zstates))+" zstates.")
+    print("Working with "+str(len(zstates))+" leading zstates.")
 
     oldk = selk
 
@@ -108,7 +108,7 @@ def create(scaledparams, x, y, cmax, nvar, target):
             result     = np.array(newz[:newsize]).reshape((newstates, norm))
             newk       = [sorted(list(result[i])) for i in range(newstates)]
 
-            posterior   = lml.prob_comps(scaledparams, x, y, zstates + newk)
+            posterior   = lml.prob_comps(scaledparams, x, y, zstates + newk, prior)
             prob        = np.array(posterior[-len(newk):])
             old_prob    = np.array(posterior[:len(oldk)])
             probsum     = np.sum(prob)
