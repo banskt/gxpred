@@ -82,6 +82,11 @@ for i, gene in enumerate(genes):
 # # parameters.append(["gxpred-mg-old", 0.1, 0.0, 0.001, 0.01, 0.005])
 
 for p in parameters:
+
+	print("\n\n###############")
+	print("# Learning for new set of parameters")
+	print(p)
+	print("###############\n\n")
 	prior = p[0]
 	params = p[1]
 	hyperpriors = p[2]
@@ -101,6 +106,7 @@ for p in parameters:
 	    
 	    k, gene = gene_training_list[i]
 	    
+	    print("\n\n####### Learning New Gene ########")
 	    print(k, gene)
 	    
 	    # select only the cis-SNPs

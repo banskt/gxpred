@@ -352,7 +352,7 @@ get_zcomps ( int nsnps, int nsample, int zlen,
         B_INV[ i*nsnps + i ] += 1 / sigmabg2;
     }
 
-    printf("Values out: %f, %f, %f, %f, %f \n", pi, mu, sigma, sigmabg, tau);
+    // printf("Values out: %f, %f, %f, %f, %f \n", pi, mu, sigma, sigmabg, tau);
 
 
     success = logdet_inverse_of_mat(nsnps, B_INV, tau, sigmabg2, &logB0det);

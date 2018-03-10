@@ -4,6 +4,7 @@ import numpy as np
 import os
 import ctypes
 from utils import hyperparameters
+import math
 
 def czcompgrad(params, x, y, zstates, get_grad=True, get_exp=False, prior="gxpred-mg"):
     ''' Interface with margloglik.so,
@@ -69,11 +70,17 @@ def add_prior(param, prior, priorparams):
     if prior == "L1":
         lambd = priorparams["lambda"]
         lml_term = -np.log(lambd) - np.abs(param)/lambd
-        grad_term = np.sign(param)/lambd
+        grad_term = -np.sign(param)/lambd
     if prior == "S2":
         a = priorparams["alpha"]
-        lml_term = -( params[3]**2 / (2 * a**2) ) - np.log(a) - 0.5 * np.log(2*np.pi)
-        grad_term = params[3] / (a**2)
+        lml_term = -( param**2 / (2 * a**2) ) - np.log(a) - 0.5 * np.log(2*np.pi)
+        grad_term = -param / (a**2)
+    if prior == "InvG":
+        a = priorparams["Galpha"]
+        b = priorparams["Gbeta"]
+        lml_term = -b/param + np.log(b**a * param**(-a-1)) - np.log(math.gamma(a))
+        #grad_term = (b**a * np.exp(-b/param) / math.gamma(a)) * ((-a-1)*param**(-a-2) + b*param**(-a-3))
+        grad_term = b/(param**2) + (-a-1)/param
     return lml_term, grad_term
 
 def func_grad(scaledparams, x, y, zstates, prior, hyperpriors, hyperparams):
@@ -84,17 +91,7 @@ def func_grad(scaledparams, x, y, zstates, prior, hyperpriors, hyperparams):
         if hp:
             lml_term, grad_term = add_prior(params[i], hp, hyperparams)
             logmarglik += lml_term
-            grad[i] -= grad_term
-
-    ### S2 prior
-    # a = 0.01
-    # logmarglik += -( params[3]**2 / (2 * a**2) ) - np.log(a) - 0.5 * np.log(2*np.pi)
-    # grad[3] -= params[3] / (a**2)
-
-    ### L1 prior (1/lambda)*exp(-abs(sigmabg)/lambda)
-    # lambd = 0.05
-    # logmarglik += -np.log(lambd) - np.abs(params[3])/lambd
-    # grad[3] -= np.sign(params[3])/lambd
+            grad[i] += grad_term
 
     grad = hyperparameters.gradscale(params, grad)
     return success, -logmarglik, -grad
@@ -108,13 +105,6 @@ def func(scaledparams, x, y, zstates, prior, hyperpriors, hyperparams):
             lml_term, grad_term = add_prior(params[i], hp, hyperparams)
             logmarglik += lml_term
 
-    ### S2 prior
-    # a = 0.01
-    # logmarglik += -( params[3]**2 / (2 * a**2) ) - np.log(a) - 0.5 * np.log(2*np.pi)
-
-    ### L1 prior (1/lambda)*exp(-abs(sigmabg)/lambda)
-    # lambd = 0.05
-    # logmarglik += -np.log(lambd) - np.abs(params[3])/lambd
     return -logmarglik
 
 def prob_comps(scaledparams, x, y, zstates, prior):

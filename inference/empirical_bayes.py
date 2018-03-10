@@ -53,7 +53,7 @@ class EmpiricalBayes:
 
         bounds = [[None, None] for i in range(5)]
         # bounds[0] = [scaledparams[0], scaledparams[0]]
-        # bounds[1] = [scaledparams[1], scaledparams[1]]
+        bounds[1] = [scaledparams[1], scaledparams[1]]
         # bounds[2] = [None, 2]
         # bounds[3] = [None, scaledparams[3]]
         # bounds[4] = [None, 20]

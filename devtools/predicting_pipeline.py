@@ -39,6 +39,11 @@ else:
 # Use parameters from config.py
 for p in parameters:
 
+	print("\n\n###############")
+	print("# Predicting for new set of parameters")
+	print(p)
+	print("###############\n\n")
+
 	prior = p[0]
 	params = p[1]
 	hyperpriors = p[2]

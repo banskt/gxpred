@@ -9,7 +9,8 @@ chrom = 12
 
 # genelistfile = "target_gene_list" # r2 > 0.1 and px > 2*gx
 # genelistfile = "genes4testing_highr2" # r2 > 0.1 and r2 < predixcan_r2
-genelistfile = "genes4testing_high_and_low_r2" # r2 > 0.05
+# genelistfile = "genes4testing_high_and_low_r2" # r2 > 0.05
+genelistfile = "genes4testing_high_and_low_r2_0.001" # r2 > 0.001
 
 
 ############################
@@ -27,14 +28,83 @@ genelistfile = "genes4testing_high_and_low_r2" # r2 > 0.05
 # Hyperparams: dictionary with parameters needed by the used hyperpriors (lambda, alpha, etc)
 
 
-run_description = "unbound_L1_0.1"
+parameters = []
 prior = "gxpred-bslmm"
-# bounds = [[None, None] for i in range(5)]  ## not implemented
+set_init_params = [[0.1, 0.0, 0.1, 0.01, 0.005], [0.01, 0.0, 0.1, 0.01, 0.005], [0.1, 0.0, 0.1, 0.1, 0.005], [0.01, 0.0, 0.1, 0.1, 0.005]]
+
+
+#### Set 1
+run_description = "bound_mu_L1_0.1"
+
 hyperpriors = [None, None, None, "L1", None]
 hyperparams = {"lambda":0.1}
-init_params = [0.005, 0.0, 0.1, 0.001, 0.005]
-parameters = []
-parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+for init_params in set_init_params:
+	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+#### Set 2
+run_description = "bound_mu_L1_0.01"
+
+hyperpriors = [None, None, None, "L1", None]
+hyperparams = {"lambda":0.01}
+for init_params in set_init_params:
+	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+#### Set 3
+run_description = "bound_mu_L1_0.05"
+
+hyperpriors = [None, None, None, "L1", None]
+hyperparams = {"lambda":0.05}
+for init_params in set_init_params:
+	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+#### Set 4
+run_description = "bound_mu_InvG_L1_0.1"
+
+hyperpriors = [None, None, "InvG", "L1", None]
+hyperparams = {"lambda":0.1, "Galpha":2, "Gbeta":0.5}
+for init_params in set_init_params:
+	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+#### Set 5
+run_description = "bound_mu_InvG_L1_0.01"
+
+hyperpriors = [None, None, "InvG", "L1", None]
+hyperparams = {"lambda":0.01, "Galpha":2, "Gbeta":0.5}
+for init_params in set_init_params:
+	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+#### Set 6
+run_description = "bound_mu_InvG_L1_0.05"
+
+hyperpriors = [None, None, "InvG", "L1", None]
+hyperparams = {"lambda":0.05, "Galpha":2, "Gbeta":0.5}
+for init_params in set_init_params:
+	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+#### Set 7
+run_description = "bound_mu_InvG_2"
+
+hyperpriors = [None, None, "InvG", None, None]
+hyperparams = {"Galpha":2, "Gbeta":0.5}
+for init_params in set_init_params:
+	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+#### Set 8
+run_description = "bound_mu_InvG_3"
+
+hyperpriors = [None, None, "InvG", None, None]
+hyperparams = {"Galpha":3, "Gbeta":0.5}
+for init_params in set_init_params:
+	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+#### Set 9
+run_description = "bound_mu_NoPriors"
+
+hyperpriors = [None, None, None, None, None]
+hyperparams = {"lambda":0.05, "Galpha":2, "Gbeta":0.5}
+for init_params in set_init_params:
+	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
 
 ############################
 #
@@ -45,7 +115,8 @@ learning_dataset = "gtex"
 gtex_samplepath = os.path.join(home, "datasets/gtex/donor_ids.fam")
 gtex_gtpath = os.path.join(home, "datasets/gtex/GTEx_450Indiv_genot_imput_info04_maf01_HWEp1E6_dbSNP135IDs_donorIDs_dosage_chr"+str(chrom)+".gz")
 # gtex_rpkmpath = os.path.join(home, "datasets/gtex/gtex_wholeblood_normalized.expression.txt")
-gtex_rpkmpath = os.path.join(home, "datasets/gtex/gtex_wholeblood_normalized.lm_corr_final2.exp.txt")
+gtex_rpkmpath = os.path.join(home, "datasets/gtex/gtex_wholeblood_normalized.lm_corr.exp.klinikum.txt")
+# gtex_rpkmpath = os.path.join(home, "datasets/gtex/gtex_wholeblood_normalized.lm_corr_final2.exp.txt")
 
 learn_pickfile = "GTEx_v6p_chr"+str(chrom)+".pkl"
 

@@ -5,8 +5,11 @@ import os
 from scipy.stats import pearsonr
 
 def write_params(outdir, params):
-    if not os.path.exists(outdir):
-            os.makedirs(outdir)
+    if os.path.exists(outdir):
+        with open("error.log", 'a') as outstream:
+            outstream(params[0]+" - Folder with previous results exists! check!\n")
+        raise Exception("Folder with previous results exists! check!")
+    os.makedirs(outdir)
     with open(os.path.join(outdir, "params.txt"), 'w') as outstream:
         headers = ["Prior","pi","mu","sigma","sigmabg","tau","pi_prior","mu_prior","sigma_prior","sigmabg_prior","tau_prior"]
         dict_values = []
@@ -18,7 +21,7 @@ def write_params(outdir, params):
         for i in outdict:
             outstream.write(i+"\t"+outdict[i]+"\n")
 
-def load_target_genes(genelistfile, gene_info, chrom, chroms=range(1,23)):
+def load_target_genes(genelistfile, gene_info, chrom=None, chroms=range(1,23)):
     gene_list = []
     r2val = []
     predixcan_r2val = []
