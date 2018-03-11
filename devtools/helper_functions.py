@@ -32,17 +32,17 @@ def load_target_genes(genelistfile, gene_info, chrom=None, chroms=range(1,23)):
             r2val.append(arr[1])
             predixcan_r2val.append(arr[2])
 
-    print("Read {:d} high r2 genes\n".format(len(gene_list)))
+    print("Read {:d} genes with high r2 values\n".format(len(gene_list)))
             
-
     if chrom:
         chroms = [chrom]
     selected_gene_ids = []
     for i in gene_info:
         trimid = i.ensembl_id.split(".")[0]
         if trimid in gene_list and i.chrom in chroms:
-            print("Gene {:s}, CHR {:d}, R2 value: {:s} ".format(i.ensembl_id, i.chrom, r2val[gene_list.index(trimid)]))
+            # print("Gene {:s}, CHR {:d}, R2 value: {:s} ".format(i.ensembl_id, i.chrom, r2val[gene_list.index(trimid)]))
             selected_gene_ids.append(i.ensembl_id)
+    print("Found {:d} genes in CHR {:s}".format(len(selected_gene_ids), ",".join(list(map(str,chroms)))))
     return selected_gene_ids
 
 def write_r2_dataframe(modelpath, chrom, prior, r_values, prediction_obj):
