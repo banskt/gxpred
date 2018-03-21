@@ -34,13 +34,19 @@ class WriteModel:
         self._genefilename = os.path.join(self._dirpath, "genes.txt")
         self._SNPFILEFORMAT = "{:s}_snps.txt"
         self._ZSTATEFILEFORMAT = "{:s}_zstates.txt"
-        if not os.path.exists(self._dirpath):
-            os.makedirs(self._dirpath)
-        mode = 'w'
-        if not os.path.exists(self._genefilename):
-            with open(self._genefilename, mode) as mfile:
-                mfile.write("{:25s}\t{:25s}\t{:7s}\t{:8s}\t{:8s}\t{:8s}\t{:8s}\t{:s}\n".format("Ensembl_ID", "Gene_Name", "Success", "Gamma0", "Mu", "Sigma", "Sigma_bg", "Sigma_tau"))
-        
+        self._create_file_once = False
+
+    def _create_file(self, params):
+        if not self._create_file_once:
+            if not os.path.exists(self._dirpath):
+                os.makedirs(self._dirpath)
+            if not os.path.exists(self._genefilename):
+                nfeat = params.shape[0] - 4
+                gammas = ["{:8s}".format("Gamma"+str(i)) for i in range(0, nfeat)]
+                with open(self._genefilename, 'w') as mfile:
+                    f = "{:25s}\t{:25s}\t{:7s}\t"+"\t".join(["{:8s}"]* nfeat)+"\t{:8s}\t{:8s}\t{:8s}\t{:s}\n"
+                    mfile.write(f.format("Ensembl_ID", "Gene_Name", "Success", *gammas, "Mu", "Sigma", "Sigma_bg", "Sigma_tau"))
+            self._create_file_once = True
 
     def snpfilename(self):
         filename = os.path.join(self._dirpath, self._SNPFILEFORMAT.format(self._setgene.ensembl_id))
@@ -51,24 +57,26 @@ class WriteModel:
         filename = os.path.join(self._dirpath, self._ZSTATEFILEFORMAT.format(self._setgene.ensembl_id))
         return filename
 
-
     def _write_gene(self, success, params):
         nfeat = params.shape[0] - 4
+        gammas = ["{:8.5f}".format(params[i]) for i in range(0, nfeat)]
         with open(self._genefilename, 'a') as mfile:
-            mfile.write("{:25s}\t{:25s}\t{!r}\t{:8.5f}\t{:8.5f}\t{:8.5f}\t{:8.5f}\t{:8.5f}\n".format(self._setgene.ensembl_id, 
-                                                                                                     self._setgene.name,
-                                                                                                     success,
-                                                                                                     params[0],
-                                                                                                     params[nfeat + 0], 
-                                                                                                     params[nfeat + 1], 
-                                                                                                     params[nfeat + 2], 
-                                                                                                     params[nfeat + 3]
-                                                                                                    ))
+            f = "{:25s}\t{:25s}\t{!r}\t"+"\t".join(["{:8.5f}"]* nfeat)+"\t{:8.5f}\t{:8.5f}\t{:8.5f}\t{:8.5f}\n"
+            mfile.write(f.format(self._setgene.ensembl_id, 
+                                 self._setgene.name,
+                                 success,
+                                 *params[:nfeat],
+                                 params[nfeat + 0], 
+                                 params[nfeat + 1], 
+                                 params[nfeat + 2], 
+                                 params[nfeat + 3]
+                                ))
 
     def write_success_gene(self, gene, snps, zstates, params):
         self._setgene = gene
         self._snps = snps
         self._zstates = zstates
+        self._create_file(params)
         self._write_gene(True, params)
         self._write_snps()
         self._write_zstates()

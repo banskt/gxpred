@@ -67,7 +67,7 @@ def create(scaledparams, x, y, features, cmax, nvar, target):
     if len(selk) > 0:
         zstates += selk
 
-    print("Working with "+str(len(zstates))+" zstates.")
+    print("zstates.py: Working with "+str(len(zstates))+" leading zstates.")
 
     oldk = selk
 

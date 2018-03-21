@@ -33,8 +33,8 @@ def select_snps(gene, snpinfo, window):
     end = gene.end + window
     selected_snp = [(i,snp) for i, snp in enumerate(snpinfo) if max(len(snp.ref_allele), len(snp.alt_allele)) == 1]
     indices = [snp[0] for snp in selected_snp if snp[1].chrom == chrom and
-                                                 snp[1].bp_pos < end and
-                                                 snp[1].bp_pos > start and
+                                                 snp[1].bp_pos <= end and
+                                                 snp[1].bp_pos >= start and
                                                  snp[1].alt_allele != SNP_COMPLEMENT[snp[1].ref_allele] and
                                                  max(len(snp[1].ref_allele), len(snp[1].alt_allele)) == 1 and
                                                  snp[1].maf > 0.05 and snp[1].maf < 0.95]

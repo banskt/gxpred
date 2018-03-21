@@ -20,7 +20,8 @@ def gencode_v12(filepath, feature = 'gene', trim=False, biotype=['protein_coding
                 if linesplit[0][0] == '#' or linesplit[2] != feature: continue # skip header
 
                 chrom = linesplit[0][3:]
-                include_chroms = ['{:d}'.format(include_chrom)]
+                if include_chrom > 0:
+                    include_chroms = ['{:d}'.format(include_chrom)]
                 if chrom not in include_chroms: continue
 
                 # Any particular biotype selected?

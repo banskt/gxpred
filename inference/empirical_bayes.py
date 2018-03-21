@@ -51,6 +51,7 @@ class EmpiricalBayes:
         scaledparams = self._params
         bounds = [[None, None] for i in range(self._nhyp)]
         bounds[self._nfeat] = [scaledparams[self._nfeat], scaledparams[self._nfeat]] # bounds mu to zero
+        # bounds[1] = [-3, 3] # bounds gamma1 to -3,3
 
         self._callback_zstates(scaledparams)
 

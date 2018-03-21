@@ -27,6 +27,7 @@ def descale(scaledparams):
 def gradscale(params, der):
     #beta_pi_grad = params[0] * (1 - params[0]) * der[0]
     nhyp = params.shape[0]
+    gammas = params [ :(nhyp - 4) ]
     gamma_grad = der[ :(nhyp - 4) ]
     beta_mu_grad = der[ nhyp - 4 ] / 100
     beta_sigma_grad = params[ nhyp - 3 ] * der[ nhyp - 3 ]

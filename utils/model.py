@@ -3,7 +3,7 @@
 import numpy as np
 import random
 
-def simulate(nsample, nsnps, pi = 0.1, mu = 0.0, sigma = 0.05, sigmabg = 0.001, tau = 200):
+def simulate(nsample, nsnps, pi = 0.1, mu = 0.0, sigma = 0.05, sigmabg = 0.001, tau = 200, features=None):
     # Simulate genotype =================
     dosage = list()
     freq = list()
@@ -31,7 +31,13 @@ def simulate(nsample, nsnps, pi = 0.1, mu = 0.0, sigma = 0.05, sigmabg = 0.001, 
     # Simulate gene expression ============
     # Select the causal SNPs
     cnum = np.random.binomial(nsnps, pi)
-    causal_snps = np.random.choice(nsnps, cnum)
+
+    if features == None:
+        causal_snps = np.random.choice(nsnps, cnum)
+    else:
+        feature1 = np.ones((nsnps, 1))
+
+
 
     # initialize the v's to all non-causal
     v = np.random.normal(0, sigmabg, nsnps)
