@@ -25,6 +25,7 @@ def prediction_variables(snps, subsnps, gt):
     nsample = gt.shape[1]
     newgt = np.zeros((nsnps, nsample))
     snp_bplist = [x.bp_pos for x in snps]
+    found = len(subsnps)
     for i, snp in enumerate(subsnps):
         f = snp.maf
         if snp.bp_pos in snp_bplist:
@@ -35,9 +36,11 @@ def prediction_variables(snps, subsnps, gt):
                 x = 2.0 - gt[j, :]
             else:
                 x = np.array([f] * nsample)
+                found -= 1
                 #x = np.zeros(nsample)
         else:
             x = np.array([f] * nsample)
             #x = np.zeros(nsample)
         newgt[i, :] = x
+    print("Found {:d}/{:d} SNPs for prediction".format(found, len(subsnps)))
     return newgt

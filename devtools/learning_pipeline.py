@@ -98,6 +98,9 @@ for p in parameters:
 
 	model_dir = prior+"_{:.3f}_{:.3f}_{:.3f}_{:.3f}_{:.3f}".format(params[0], params[1], params[2], params[3], params[4])
 	modelpath = os.path.join("./z"+str(zmax), run_description, model_dir)
+	if os.path.exists(modelpath):
+		print("Results for current parameters exists! Continue..")
+		continue
 	write_params(modelpath, p)
 
 	model = WriteModel(modelpath, chrom)

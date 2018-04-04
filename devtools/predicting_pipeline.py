@@ -14,7 +14,7 @@ from config import *
 
 if not os.path.exists(p_pickfile):
 # Read genotype (quite slow for testing) use pickle below
-	p_oxf = ReadOxford(p_gtpath, p_samplepath, chrom, dataset)
+	p_oxf = ReadOxford(p_gtpath, p_samplepath, chrom, predicting_dataset)
 	p_genotype = np.array(p_oxf.dosage)
 	p_samplenames = p_oxf.samplenames
 	p_snps = p_oxf.snps_info
@@ -52,7 +52,12 @@ for p in parameters:
 	model_dir = prior+"_{:.3f}_{:.3f}_{:.3f}_{:.3f}_{:.3f}".format(params[0], params[1], params[2], params[3], params[4])
 	modelpath = os.path.join("./z"+str(zmax), run_description, model_dir)
 
+
 	outfileprefix = os.path.join(modelpath,"pred_chr"+str(chrom))
+
+	if os.path.exists(outfileprefix+"._chr12.geneids"):
+		print("Results for current parameters exists! Continue..")
+		continue
 
 
 	printStamp("Predicting for "+model_dir)

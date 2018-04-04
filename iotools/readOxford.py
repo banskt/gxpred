@@ -119,7 +119,7 @@ class ReadOxford:
                 freq = sum(snp_dosage) / 2 / len(snp_dosage)
                 maf = freq
 
-                this_snp = SnpInfo(    chrom      = int(self._chrom),
+                this_snp = SnpInfo(    chrom      = int(mline[0]), # chrom      = int(self._chrom),
                                        bp_pos     = int(mline[2]),
                                        varid      = mline[1].decode("utf-8"),
                                        ref_allele = mline[3].decode("utf-8"),
@@ -155,7 +155,7 @@ class ReadOxford:
                 freq = float(mline[5])
                 maf = freq
 
-                this_snp = SnpInfo(    chrom      = int(self._chrom),
+                this_snp = SnpInfo(    chrom      = int(mline[0]), # chrom      = int(self._chrom),
                                        bp_pos     = int(mline[2]),
                                        varid      = mline[1].decode("utf-8"),
                                        ref_allele = mline[3].decode("utf-8"),

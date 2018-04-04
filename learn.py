@@ -52,7 +52,7 @@ def parse_args():
 
     parser.add_argument('--params',
                         nargs='*',
-                        default=[0.1, 0.0, 0.001, 0.01, 0.005],
+                        default=[0.1, 0.0, 0.1, 0.01, 0.005],
                         type=float,
                         dest='params',
                         metavar='FLOAT',

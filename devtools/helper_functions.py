@@ -4,22 +4,26 @@ import numpy as np
 import os
 from scipy.stats import pearsonr
 
-def write_params(outdir, params):
+def write_params(outdir, params, overwrite=True):
     if os.path.exists(outdir):
-        with open("error.log", 'a') as outstream:
-            outstream(params[0]+" - Folder with previous results exists! check!\n")
-        raise Exception("Folder with previous results exists! check!")
-    os.makedirs(outdir)
+        if not overwrite:
+            with open("error.log", 'a') as outstream:
+                outstream(params[0]+" - Folder with previous results exists! check!\n")
+            raise Exception("Folder with previous results exists! check!")
+    else:
+        os.makedirs(outdir)
     with open(os.path.join(outdir, "params.txt"), 'w') as outstream:
         headers = ["Prior","pi","mu","sigma","sigmabg","tau","pi_prior","mu_prior","sigma_prior","sigmabg_prior","tau_prior"]
         dict_values = []
-        for i in params[3].keys():
-            headers.append(i)
-            dict_values.append(str(params[3][i]))
+        if params[3] != None:
+            for i in params[3].keys():
+                headers.append(i)
+                dict_values.append(str(params[3][i]))
         data = [params[0]] + [str(item) for sublist in params[1:3] for item in sublist] + dict_values
         outdict = dict(zip(headers, data))
         for i in outdict:
             outstream.write(i+"\t"+outdict[i]+"\n")
+
 
 def load_target_genes(genelistfile, gene_info, chrom=None, chroms=range(1,23)):
     gene_list = []
@@ -45,27 +49,29 @@ def load_target_genes(genelistfile, gene_info, chrom=None, chroms=range(1,23)):
     print("Found {:d} genes in CHR {:s}".format(len(selected_gene_ids), ",".join(list(map(str,chroms)))))
     return selected_gene_ids
 
-def write_r2_dataframe(modelpath, chrom, prior, r_values, prediction_obj):
+def write_r2_dataframe(modelpath, chrom, prior, r_values, prediction_obj, overwrite=False):
     import pandas as pd
 
     outtable = os.path.join(modelpath, "genes_r2.txt")
-    if not os.path.exists(outtable):
+    if not os.path.exists(outtable) or overwrite:
         # Read genes.txt table with learned parameters and fix some columns and row namings
         learning_table = os.path.join(modelpath, "chr{:d}".format(chrom), "genes.txt")
         genes_df = pd.read_table(learning_table, header = 0, sep='\s+')
         newcolumns = list(genes_df.columns)
         newcolumns = [i.strip() for i in newcolumns]
         genes_df.columns = newcolumns
+        genes_df["Ensembl_ID"] = [str(i).split(".")[0] for i in genes_df["Ensembl_ID"]]
     else:
         genes_df = pd.read_table(outtable, header=0)
         
-    genes_df.index = [i.split(".")[0] for i in genes_df["Ensembl_ID"]]
+    genes_df.index = [str(i).split(".")[0] for i in genes_df["Ensembl_ID"]]
 
     new_df = pd.DataFrame(list(r_values**2), columns=[prior])
     new_df.index = prediction_obj.sorted_gene_names
+    new_df["Ensembl_ID"] = [str(i).split(".")[0] for i in prediction_obj.sorted_gene_names]
 
-    compiled_table = pd.concat([genes_df, new_df], axis=1)
-    compiled_table.to_csv(outtable,sep="\t", float_format='%.4f', index=False, na_rep="NA")
+    compiled_table = pd.merge(genes_df, new_df, how='outer', on=genes_df.columns[0])
+    compiled_table.to_csv(outtable,sep="\t", float_format='%.5f', index=False, na_rep="NA")
 
 def write_predicted_r2(outfile, prior, params, gxpred_r, predixcan_r, gene_names):
     mode = "w"

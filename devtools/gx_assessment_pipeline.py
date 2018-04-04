@@ -67,6 +67,10 @@ for p in parameters:
 
 	modelpath = os.path.join("./z"+str(zmax), run_description, model_dir)
 
+	if os.path.exists(os.path.join(modelpath, "genes_r2.txt")):
+		print("Previous assesment exists. Continue")
+		continue
+
 	gxpred_predpath = os.path.join(modelpath)
 	gxpred = ReadPrediction(gxpred_predpath, reference_samplepath, "gxpred", trim=True)
 

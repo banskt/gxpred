@@ -3,11 +3,12 @@ import numpy as np
 
 class ReadPrediction:
       
-    def __init__(self, predpath, samplepath, predictor, trim=False):
+    def __init__(self, predpath, samplepath, predictor, trim=False, prefix=None):
         self._pred_path = predpath
         self._predictor = predictor #gxpred or predixcan
         self._expr_mat = None
         self._samplepath = samplepath
+        self._prefix = prefix
         self._load_samples()
         self._load_chromosomes()
         self._prev_available = False
@@ -32,7 +33,10 @@ class ReadPrediction:
     def _load_chromosome(self, chrom):
         
         if self._predictor == "gxpred":
-            basefile = "pred_chr"+chrom
+            if self._prefix:
+                basefile = self._prefix+chrom
+            else:
+                basefile = "pred_chr"+chrom
             pred_geneids = os.path.join(self._pred_path,basefile+".geneids")
             pred_exp = os.path.join(self._pred_path,basefile+".txt")
             if os.path.exists(pred_geneids) and os.path.exists(pred_exp):
@@ -47,6 +51,10 @@ class ReadPrediction:
                 return False, [], []
             
         if self._predictor == "predixcan":
+            if self._prefix:
+                filename = self._prefix+chrom
+            else:
+                filename = "predixcan_chr"+chrom+".output"
             filename = "predixcan_chr"+chrom+".output"
             filepath = os.path.join(self._pred_path, filename)
             if os.path.exists(filepath):
@@ -69,7 +77,11 @@ class ReadPrediction:
             if success:
                 if self._predictor == "gxpred":
                     if type(self._expr_mat) is not np.ndarray:
-                        self._expr_mat = expr_mat
+                        print(len(expr_mat.shape))
+                        if len(expr_mat.shape) < 2:
+                            self._expr_mat = expr_mat[np.newaxis].T
+                        else:
+                            self._expr_mat = expr_mat
                     else:
                         self._expr_mat = np.concatenate((self._expr_mat, expr_mat), axis=1)
                     self._gene_names += gene_names
@@ -87,6 +99,7 @@ class ReadPrediction:
                 common_samples, ix = self._get_common_elements(self._sorted_samples, samplelist)
                 # [x for x in samplelist if x in self._sorted_samples]
                 print("Samples found: {:d} of {:d}".format(len(common_samples), len(samplelist)))
+                print(self._sorted_expr_mat.shape)
                 self._sorted_expr_mat = self._sorted_expr_mat[ix,:]    # index samples rows
                 self._sorted_samples = [self._sorted_samples[i] for i in ix]        # index samples names
             else:

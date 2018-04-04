@@ -30,80 +30,118 @@ genelistfile = "genes4testing_high_and_low_r2_0.001" # r2 > 0.001
 
 parameters = []
 prior = "gxpred-bslmm"
-set_init_params = [[0.1, 0.0, 0.1, 0.01, 0.005], [0.01, 0.0, 0.1, 0.01, 0.005], [0.1, 0.0, 0.1, 0.1, 0.005], [0.01, 0.0, 0.1, 0.1, 0.005]]
+
+set_init_params = [[0.1, 0.0, 0.1, 0.1, 0.005]]
+
+# set_init_params = [0.1, 0.0, 0.15, 0.03, 0.005], \
+# 				   [0.1, 0.0, 0.1, 0.01, 0.005],  \
+# 				   [0.1, 0.0, 0.1, 0.001, 0.005],  \
+# 				   [0.1, 0.0, 0.01, 0.1, 0.005],  \
+# 				   [0.1, 0.0, 0.1, 0.1, 0.005],   \
+# 				   [0.1, 0.0, 0.1, 0.01, 0.005],  \
+# 				   [0.1, 0.0, 0.1, 0.001, 0.005],  \
+# 				   [0.01, 0.0, 0.1, 0.1, 0.005], \
+# 				   [0.01, 0.0, 0.1, 0.01, 0.005], \
+# 				   [0.01, 0.0, 0.1, 0.001, 0.005], \
+# 				   [0.1, 0.0, 0.5, 0.5, 0.005]]   
 
 
-#### Set 1
-run_description = "bound_mu_L1_0.1"
-
-hyperpriors = [None, None, None, "L1", None]
-hyperparams = {"lambda":0.1}
-for init_params in set_init_params:
-	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
-
-#### Set 2
-run_description = "bound_mu_L1_0.01"
-
-hyperpriors = [None, None, None, "L1", None]
-hyperparams = {"lambda":0.01}
-for init_params in set_init_params:
-	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
-
-#### Set 3
-run_description = "bound_mu_L1_0.05"
-
-hyperpriors = [None, None, None, "L1", None]
-hyperparams = {"lambda":0.05}
-for init_params in set_init_params:
-	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
-
-#### Set 4
-run_description = "bound_mu_InvG_L1_0.1"
-
-hyperpriors = [None, None, "InvG", "L1", None]
-hyperparams = {"lambda":0.1, "Galpha":2, "Gbeta":0.5}
-for init_params in set_init_params:
-	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
-
-#### Set 5
-run_description = "bound_mu_InvG_L1_0.01"
-
-hyperpriors = [None, None, "InvG", "L1", None]
-hyperparams = {"lambda":0.01, "Galpha":2, "Gbeta":0.5}
-for init_params in set_init_params:
-	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
-
-#### Set 6
-run_description = "bound_mu_InvG_L1_0.05"
-
-hyperpriors = [None, None, "InvG", "L1", None]
-hyperparams = {"lambda":0.05, "Galpha":2, "Gbeta":0.5}
-for init_params in set_init_params:
-	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
-
-#### Set 7
-run_description = "bound_mu_InvG_2"
-
-hyperpriors = [None, None, "InvG", None, None]
-hyperparams = {"Galpha":2, "Gbeta":0.5}
-for init_params in set_init_params:
-	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
-
-#### Set 8
-run_description = "bound_mu_InvG_3"
-
-hyperpriors = [None, None, "InvG", None, None]
-hyperparams = {"Galpha":3, "Gbeta":0.5}
-for init_params in set_init_params:
-	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
-
-#### Set 9
-run_description = "bound_mu_NoPriors"
+#### Set 
+# run_description = "only_trans_eQTLs_filtered_NoPriors"
+run_description = "trans_eQTLs_NoPriors"
 
 hyperpriors = [None, None, None, None, None]
 hyperparams = {"lambda":0.05, "Galpha":2, "Gbeta":0.5}
 for init_params in set_init_params:
 	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+# #### Set 1
+# run_description = "bound_mu_L1_0.1"
+
+# hyperpriors = [None, None, None, "L1", None]
+# hyperparams = {"lambda":0.1}
+# for init_params in set_init_params:
+# 	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+# #### Set 2
+# run_description = "bound_mu_L1_0.01"
+
+# hyperpriors = [None, None, None, "L1", None]
+# hyperparams = {"lambda":0.01}
+# for init_params in set_init_params:
+# 	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+# #### Set 3
+# run_description = "bound_mu_L1_0.05"
+
+# hyperpriors = [None, None, None, "L1", None]
+# hyperparams = {"lambda":0.05}
+# for init_params in set_init_params:
+# 	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+# #### Set 4
+# run_description = "bound_mu_InvG_L1_0.1"
+
+# hyperpriors = [None, None, "InvG", "L1", None]
+# hyperparams = {"lambda":0.1, "Galpha":2, "Gbeta":0.5}
+# for init_params in set_init_params:
+# 	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+# #### Set 5
+# run_description = "bound_mu_InvG_L1_0.01"
+
+# hyperpriors = [None, None, "InvG", "L1", None]
+# hyperparams = {"lambda":0.01, "Galpha":2, "Gbeta":0.5}
+# for init_params in set_init_params:
+# 	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+# #### Set 6
+# run_description = "bound_mu_InvG_L1_0.05"
+
+# hyperpriors = [None, None, "InvG", "L1", None]
+# hyperparams = {"lambda":0.05, "Galpha":2, "Gbeta":0.5}
+# for init_params in set_init_params:
+# 	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+# #### Set 7
+# run_description = "bound_mu_InvG_2"
+
+# hyperpriors = [None, None, "InvG", None, None]
+# hyperparams = {"Galpha":2, "Gbeta":0.5}
+# for init_params in set_init_params:
+# 	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+# #### Set 8
+# run_description = "bound_mu_InvG_3"
+
+# hyperpriors = [None, None, "InvG", None, None]
+# hyperparams = {"Galpha":3, "Gbeta":0.5}
+# for init_params in set_init_params:
+# 	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+# #### Set 9
+# run_description = "bound_mu_NoPriors"
+
+# hyperpriors = [None, None, None, None, None]
+# hyperparams = {"lambda":0.05, "Galpha":2, "Gbeta":0.5}
+# for init_params in set_init_params:
+# 	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+# #### Set 10
+# run_description = "bound_mu_Levy_1"
+
+# hyperpriors = [None, None, "InvG", None, None]
+# hyperparams = {"Galpha":0.5, "Gbeta":0.5}
+# for init_params in set_init_params:
+# 	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
+
+# #### Set 11
+# run_description = "bound_mu_Levy_1_L1_0.01"
+
+# hyperpriors = [None, None, "InvG", "L1", None]
+# hyperparams = {"lambda":0.01, "Galpha":0.5, "Gbeta":0.5}
+# for init_params in set_init_params:
+# 	parameters.append([prior, init_params, hyperpriors, hyperparams, run_description])
 
 
 ############################
@@ -133,14 +171,10 @@ zmax = 1    # z parameter
 ############################
 
 predicting_dataset="cardiogenics"
-
 reference_home = os.path.join(home,"datasets/cardiogenics/")
 p_gtpath=os.path.join(reference_home, "genotypes/CG_"+str(chrom)+".imputed.gz")
 p_samplepath=os.path.join(reference_home, "genotypes/CG.sample")
 p_pickfile = "CG_"+str(chrom)+".pkl"
-
-
-predixcan_pickfile = "Predixcan.pkl"
 
 
 # Load reference expression data for cardiogenics
@@ -150,3 +184,5 @@ reference_samplepath=os.path.join(reference_home, "genotypes/CG.sample")
 
 # Predixcan prediction path
 pxpred_predpath = os.path.join(home, "predictions/cardiogenics/predixcan_predictions_klinikum")
+predixcan_pickfile = "Predixcan.pkl"
+
