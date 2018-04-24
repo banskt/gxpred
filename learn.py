@@ -175,6 +175,7 @@ for i, gene in enumerate(genes[:5]):
 
         if emp_bayes.success:
             res = emp_bayes.params
+            res[4] = 1 / np.sqrt(res[4])
             model_snps = [snps[x] for x in snpmask]
             model_zstates = list()
             scaledparams = hyperparameters.scale(emp_bayes.params)

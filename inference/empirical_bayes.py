@@ -16,11 +16,12 @@ class EmpiricalBayes:
     _global_zstates = list()
     _update_zstates = True
 
-    def __init__(self, genotype, phenotype, features, cmax, params, ztarget = 0.98, method = "old"):
+    def __init__(self, genotype, phenotype, features, dist_feature, cmax, params, ztarget = 0.98, method = "old"):
 
         self._genotype = genotype
         self._phenotype = phenotype
         self._features = features
+        self._dist_feature = dist_feature
         self._cmax = cmax
         self._params = hyperparameters.scale(params)
         self._ztarget = ztarget
@@ -51,6 +52,7 @@ class EmpiricalBayes:
         scaledparams = self._params
         bounds = [[None, None] for i in range(self._nhyp)]
         bounds[self._nfeat] = [scaledparams[self._nfeat], scaledparams[self._nfeat]] # bounds mu to zero
+        # bounds[0] = [scaledparams[0], scaledparams[0]]
         # bounds[1] = [-3, 3] # bounds gamma1 to -3,3
 
         self._callback_zstates(scaledparams)
@@ -75,7 +77,7 @@ class EmpiricalBayes:
 
 
     def _log_marginal_likelihood(self, scaledparams):
-        success, lml, der = logmarglik.func_grad(scaledparams, self._genotype, self._phenotype, self._features, self._global_zstates)
+        success, lml, der = logmarglik.func_grad(scaledparams, self._genotype, self._phenotype, self._features, self._dist_feature, self._global_zstates)
         if not success:
             raise CostFunctionNumericalError()
         return lml, der
@@ -86,6 +88,6 @@ class EmpiricalBayes:
             if   self._method == "old":
                 self._global_zstates = zs_old.create(scaledparams, self._genotype, self._phenotype, self._features, self._cmax, self._nsnps, self._ztarget)
             elif self._method == "new":
-                self._global_zstates =     zs.create(scaledparams, self._genotype, self._phenotype, self._features, self._cmax, self._nsnps, self._ztarget)
+                self._global_zstates =     zs.create(scaledparams, self._genotype, self._phenotype, self._features, self._dist_feature, self._cmax, self._nsnps, self._ztarget)
             elif self._method == "basic":
                 self._global_zstates = [[]] + [[i] for i in range(self._nsnps)]

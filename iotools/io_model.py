@@ -44,8 +44,9 @@ class WriteModel:
                 nfeat = params.shape[0] - 4
                 gammas = ["{:8s}".format("Gamma"+str(i)) for i in range(0, nfeat)]
                 with open(self._genefilename, 'w') as mfile:
-                    f = "{:25s}\t{:25s}\t{:7s}\t"+"\t".join(["{:8s}"]* nfeat)+"\t{:8s}\t{:8s}\t{:8s}\t{:s}\n"
-                    mfile.write(f.format("Ensembl_ID", "Gene_Name", "Success", *gammas, "Mu", "Sigma", "Sigma_bg", "Sigma_tau"))
+                    f = "{:25s}\t{:25s}\t{:7s}\t"+"\t".join(["{:8s}"] * nfeat)+"\t{:8s}\t{:8s}\t{:8s}\t{:8s}\n"
+                    # print(f.format("Ensembl_ID", "Gene_Name", "Success", "Mu", "Sigma", "Sigma_bg", "Sigma_tau", *gammas))
+                    mfile.write(f.format("Ensembl_ID", "Gene_Name", "Success", "Mu", "Sigma", "Sigma_bg", "Sigma_tau", *gammas))
             self._create_file_once = True
 
     def snpfilename(self):
@@ -65,12 +66,11 @@ class WriteModel:
             mfile.write(f.format(self._setgene.ensembl_id, 
                                  self._setgene.name,
                                  success,
-                                 *params[:nfeat],
                                  params[nfeat + 0], 
                                  params[nfeat + 1], 
                                  params[nfeat + 2], 
-                                 params[nfeat + 3]
-                                ))
+                                 params[nfeat + 3],
+                                 *params[:nfeat] ))
 
     def write_success_gene(self, gene, snps, zstates, params):
         self._setgene = gene
@@ -145,7 +145,10 @@ class ReadModel:
         genes = list()
         with open(self._genefilename, 'r') as mfile:
             for mline in mfile:
-                linesplit = mline.strip().split('\t')
+                line = mline.strip()
+                if line == "":
+                    continue
+                linesplit = line.split('\t')
                 gene_name = linesplit[1].strip()
                 gene_id = linesplit[0].strip()
                 if gene_id == "Ensembl_ID":

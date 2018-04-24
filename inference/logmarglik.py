@@ -5,7 +5,7 @@ import os
 import ctypes
 from utils import hyperparameters
 
-def czcompgrad(params, x, y, features, zstates, get_grad=True, get_exp=False):
+def czcompgrad(params, x, y, features, dist_feature, zstates, get_grad=True, get_exp=False):
     ''' Interface with margloglik.so,
         an efficient C code for calculating log marginal likelihood and gradient.
     '''
@@ -44,21 +44,27 @@ def czcompgrad(params, x, y, features, zstates, get_grad=True, get_exp=False):
     nhyp = nfeat + 4
 
     # this can overflow
-    # pi_arr = 1 / (1 + np.exp(-np.einsum('k, ik -> i', params[:nfeat], features)))
+    # pi_arr2 = 1 / (1 + dist_feature * np.exp(-np.einsum('k, ik -> i', params[:nfeat], features)))
 
-    tmp1 = np.einsum('k, ik -> i', params[:nfeat], features)
-    ix_pos = tmp1 > 0 
-    ix_neg = tmp1 <= 0 
-    pi_arr = np.zeros(tmp1.shape[0])
-    pi_arr[ix_pos] = 1 / (1 + np.exp(-tmp1[ix_pos]))
-    pi_arr[ix_neg] = np.exp(tmp1[ix_neg]) / (1 + np.exp(tmp1[ix_neg]))
+    gT_A = np.einsum('k, ik -> i', params[:nfeat], features)
+    ix_pos = gT_A > 0 
+    ix_neg = gT_A <= 0 
+    pi_arr = np.zeros(gT_A.shape[0])
+    # pi_arr = 1 / (1 + dist_feature*np.exp(-gT_A))
 
+
+    # pi_arr[ix_pos] = 1 / (1 + np.exp(-gT_A[ix_pos]))
+    pi_arr[ix_pos] = 1 / (1 + dist_feature[ix_pos]*np.exp(-gT_A[ix_pos]))
     
+
+    # pi_arr[ix_neg] = np.exp(gT_A[ix_neg]) / (1 + np.exp(gT_A[ix_neg]))
+    pi_arr[ix_neg] = np.exp(gT_A[ix_neg]) / (dist_feature[ix_neg] + np.exp(gT_A[ix_neg]))
+
     mu =      params[ nfeat + 0 ]
     sigma =   params[ nfeat + 1 ]
     sigmabg = params[ nfeat + 2 ]
     tau =     params[ nfeat + 3 ]
-    print("Before czcomps:", params[:nfeat], mu, sigma, sigmabg, tau)
+    # print("Before czcomps:", params[:nfeat], mu, sigma, sigmabg, tau)
     
     zlen = len(zstates)
     zarr = np.array([item for sublist in zstates for item in sublist], dtype=np.int32)
@@ -76,43 +82,33 @@ def czcompgrad(params, x, y, features, zstates, get_grad=True, get_exp=False):
     
     return success, logmarglik[0], zcomps, grad, zexp
 
-def func_grad(scaledparams, x, y, features, zstates):
-    params = hyperparameters.descale(scaledparams)
-    print("called from func_grad")
-    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, features, zstates, get_grad=True)
-    grad = hyperparameters.gradscale(params, grad)
-
-    # lambd = 0.1
-    # lml_term = -np.log(lambd) - np.abs(params[1])/lambd
-    # grad_term = -np.sign(params[1])/lambd
-
+def add_prior(params):
+    lambd = 0.1
+    lml_term = -np.log(lambd) - np.abs(params[1])/lambd
+    grad_term = -np.sign(params[1])/lambd
     # logmarglik += lml_term
     # grad[1] += grad_term
+    return lml_term, grad_term
+    
 
-    # print("Values out func_grad:", grad[:features.shape[1]])
+def func_grad(scaledparams, x, y, features, dist_feature, zstates):
+    params = hyperparameters.descale(scaledparams)
+    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, features, dist_feature, zstates, get_grad=True)
+    grad = hyperparameters.gradscale(params, grad)
     return success, -logmarglik, -grad
 
-def func(scaledparams, x, y, features, zstates):
+def func(scaledparams, x, y, features, dist_feature, zstates):
     params = hyperparameters.descale(scaledparams)
-    print("called from func")
-    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, features, zstates, get_grad=False)
-
-    # lambd = 0.01
-    # lml_term = -np.log(lambd) - np.abs(params[1])/lambd
-    
-    # logmarglik += lml_term
-
+    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, features, dist_feature, zstates, get_grad=False)
     return -logmarglik
 
-def prob_comps(scaledparams, x, y, features, zstates):
+def prob_comps(scaledparams, x, y, features, dist_feature, zstates):
     params = hyperparameters.descale(scaledparams)
-    print("called from prob_comps")
-    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, features, zstates, get_grad=False)
+    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, features, dist_feature, zstates, get_grad=False)
     return zprob
 
-def model_exp(scaledparams, x, y, features, zstates):
+def model_exp(scaledparams, x, y, features, dist_feature, zstates):
     params = hyperparameters.descale(scaledparams)
-    print("called from model_exp")
-    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, features, zstates, get_grad=False, get_exp=True)
+    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, features, dist_feature, zstates, get_grad=False, get_exp=True)
     zexp = zexp.reshape(len(zstates), x.shape[0])
     return zprob, zexp

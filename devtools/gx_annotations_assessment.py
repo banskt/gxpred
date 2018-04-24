@@ -72,13 +72,8 @@ for p in parameters:
 	gxpred = ReadPrediction(gxpred_predpath, reference_samplepath, "gxpred", trim=True)
 
 	# filter gxpred predicted values
-	print(len(gxpred.samples))
-	print(len(target_donors))
-
 	gxpred.sort_by_gene(target_genelist)
-	print(len(gxpred.samples))
 	gxpred.sort_by_samples(target_donors, use_prev=True)
-
 
 	# Filter and sort the reference expression values
 	# Cardiogenics variables

@@ -15,9 +15,10 @@ def write_params(outdir, params, overwrite=True):
     with open(os.path.join(outdir, "params.txt"), 'w') as outstream:
         headers = ["Prior","pi","mu","sigma","sigmabg","tau","pi_prior","mu_prior","sigma_prior","sigmabg_prior","tau_prior"]
         dict_values = []
-        for i in params[3].keys():
-            headers.append(i)
-            dict_values.append(str(params[3][i]))
+        if params[3] != None:
+            for i in params[3].keys():
+                headers.append(i)
+                dict_values.append(str(params[3][i]))
         data = [params[0]] + [str(item) for sublist in params[1:3] for item in sublist] + dict_values
         outdict = dict(zip(headers, data))
         for i in outdict:
@@ -47,11 +48,11 @@ def load_target_genes(genelistfile, gene_info, chrom=None, chroms=range(1,23)):
     print("Found {:d} genes in CHR {:s}".format(len(selected_gene_ids), ",".join(list(map(str,chroms)))))
     return selected_gene_ids
 
-def write_r2_dataframe(modelpath, chrom, prior, r_values, prediction_obj):
+def write_r2_dataframe(modelpath, chrom, prior, r_values, prediction_obj, overwrite=False):
     import pandas as pd
 
     outtable = os.path.join(modelpath, "genes_r2.txt")
-    if not os.path.exists(outtable):
+    if not os.path.exists(outtable) or overwrite:
         # Read genes.txt table with learned parameters and fix some columns and row namings
         learning_table = os.path.join(modelpath, "chr{:d}".format(chrom), "genes.txt")
         genes_df = pd.read_table(learning_table, header = 0, sep='\s+')
@@ -69,7 +70,7 @@ def write_r2_dataframe(modelpath, chrom, prior, r_values, prediction_obj):
     new_df["Ensembl_ID"] = [str(i).split(".")[0] for i in prediction_obj.sorted_gene_names]
 
     compiled_table = pd.merge(genes_df, new_df, how='outer', on=genes_df.columns[0])
-    compiled_table.to_csv(outtable,sep="\t", float_format='%.4f', index=False, na_rep="NA")
+    compiled_table.to_csv(outtable,sep="\t", float_format='%.5f', index=False, na_rep="NA")
 
 def write_predicted_r2(outfile, prior, params, gxpred_r, predixcan_r, gene_names):
     mode = "w"

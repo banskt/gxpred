@@ -49,9 +49,6 @@ for p in parameters:
 	hyperparams = p[3]
 	run_description = p[4]
 
-	from iotools import snp_annotator
-
-	
 	model_dir = prior+"_{:.3f}_{:.3f}_{:.3f}_{:.3f}_{:.3f}".format(params[0], params[1], params[2], params[3], params[4])
 	modelpath = os.path.join("./z"+str(zmax), run_description, model_dir)
 

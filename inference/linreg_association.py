@@ -11,7 +11,7 @@ class LinRegAssociation:
     _fit_once = False
 
 
-    def __init__(self, geno, expr, min_snps, pval_cutoff = 0.005):
+    def __init__(self, geno, expr, min_snps, pval_cutoff = 0.005, cutoff="soft"):
         _path = os.path.dirname(__file__)
         _clib = np.ctypeslib.load_library('../lib/linear_regression.so', _path)
         self._cfstat = _clib.fit
@@ -19,6 +19,7 @@ class LinRegAssociation:
         self._expr = expr
         self._min_snps = min_snps
         self._pval_cutoff = pval_cutoff
+        self._cutoff = cutoff
 
 
     @property
@@ -37,7 +38,16 @@ class LinRegAssociation:
     def selected_variables(self):
         self.fit()
         select = np.where(self._pvals < self._pval_cutoff)[0]
-        nselect = max(select.shape[0], self._min_snps)
+        if self._cutoff == "soft":
+            nselect = max(select.shape[0], self._min_snps)
+        if self._cutoff == "newsoft":
+            nselect = max(select.shape[0], 20)
+        if self._cutoff == "pval":
+            nselect = select.shape[0]
+        if self._cutoff == "min":
+            nselect = self._min_snps
+        if self._cutoff == "hard":
+            nselect = min(select.shape[0], self._min_snps)
         return self._ordered_indices[:nselect]
 
 
