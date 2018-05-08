@@ -69,7 +69,6 @@ class ReadPrediction:
             if success:
                 if self._predictor == "gxpred":
                     if type(self._expr_mat) is not np.ndarray:
-                        print(len(expr_mat.shape))
                         if len(expr_mat.shape) < 2:
                             self._expr_mat = expr_mat[np.newaxis].T
                         else:

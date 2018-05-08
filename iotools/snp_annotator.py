@@ -15,6 +15,56 @@
 
 import numpy as np
 import math
+import os
+import subprocess
+
+def greedy_prune_LD(matrix, corr_cutoff = 0.2):
+    ix_set = []
+    for row in np.tril(matrix, k=-1):
+        ix = [i for i, x in enumerate(row) if x > corr_cutoff or x < -corr_cutoff]
+        ix_set = np.union1d(ix_set, ix)
+    return ix_set.astype(int)
+
+def write_snps_table(gene, selected_snps, prefix, gene_ld_outpath):
+    outfilename = os.path.join(gene_ld_outpath, gene.ensembl_id + "." + prefix +".snps")
+    with open(outfilename, 'w') as outstream:
+        outstream.write("RSID position chromosome A_allele B_allele\n")
+        for snp in selected_snps:
+            newrsid = "{:d}_{:d}_{:s}_{:s}_b37".format(snp.chrom, snp.bp_pos, snp.ref_allele, snp.alt_allele)
+            outstream.write("{:s} {:d} {:d} {:s} {:s}\n".format(newrsid, snp.bp_pos, snp.chrom, snp.ref_allele, snp.alt_allele))
+    return outfilename
+
+def get_snps_LD(gene, selected_snps, min_pos, max_pos, genofile_plink, ldstorepath, gene_ld_outpath):
+	filename = write_snps_table(gene, selected_snps, "cis", gene_ld_outpath )
+
+	outfilebasename = os.path.join(gene_ld_outpath, gene.ensembl_id)
+	print(outfilebasename)
+
+	if not os.path.exists(outfilebasename+".bcor"):
+		cmd = "{:s} --bcor {:s}.bcor --bplink {:s} --incl-range {:d}-{:d} --n-threads 8".format(ldstorepath, outfilebasename, genofile_plink, min_pos, max_pos)
+		merge_cmd = "{:s} --bcor {:s}.bcor --merge 8".format(ldstorepath, outfilebasename)
+
+		print(cmd)
+		print(merge_cmd)
+
+		subprocess.call(cmd.split(" "))
+		subprocess.call(merge_cmd.split(" "))
+
+		for i in range(1,9):
+			rm_cmd = "rm {:s}.bcor_{:d}".format(outfilebasename, i)
+			subprocess.call(rm_cmd.split(" "))
+	else:
+		print(outfilebasename+".bcor exists!")
+	
+	extract_cmd = "{:s} --bcor {:s}.bcor --matrix {:s}.matrix --incl-variants {:s}".format(ldstorepath, outfilebasename, outfilebasename, filename)
+	# extract_cmd2 = "{:s} --bcor {:s}.bcor --table {:s}.all.table --incl-variants {:s} ;\n".format(ldstorepath, outfilebasename, outfilebasename, filename)
+	subprocess.call(extract_cmd.split(" "))
+
+	mat = np.loadtxt(outfilebasename+".matrix")
+	ix = greedy_prune_LD(mat)
+	return ix
+
+    
 
 def get_dummy_dist_feature(snps, gene_info, window):
 	start = gene_info.start
@@ -76,12 +126,13 @@ def get_features(selected_snps, usefeat):
 	# first feature must always be a row of 1's
 	nsnps_used = len(selected_snps)
 	feature1 = np.ones((nsnps_used, 1))
-	if feat == "nofeat":
+	if usefeat == "nofeat":
 		features = feature1    
-	if feat == "randomint":
+	if usefeat == "randomint":
 		feature2 = np.random.random_integers(0,1, nsnps_used)[np.newaxis].T
 		features = np.concatenate((feature1,feature2), axis=1)
 	return features
+
 
 def get_promoter_annotation(gene, selected_snps):
 	start = gene_info.start

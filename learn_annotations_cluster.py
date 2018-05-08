@@ -140,7 +140,9 @@ for p in config.parameters:
             snpmask = cismask
 
             # if number of cis SNPs > threshold, use p-value cut-off
-
+            min_pos = f_snps[cismask[0]].bp_pos - 1000
+            max_pos = f_snps[cismask[-1]].bp_pos + 1000
+            
             if len(cismask) > config.min_snps:
                 assoc_model = LinRegAssociation(predictor, target, config.min_snps, config.pval_cutoff, cutoff)
                 pvalmask = cismask[assoc_model.selected_variables]
@@ -157,6 +159,16 @@ for p in config.parameters:
                 np.random.shuffle(predictor.T)
 
             selected_snps = [f_snps[x] for x in snpmask]
+
+            if config.prune_LD:
+                ld_indices = snp_annotator.get_snps_LD(gene, selected_snps, min_pos, max_pos, config.genofile_plink, config.ldstorepath, config.ld_path)
+                snpmask = np.delete(snpmask, np.reshape(ld_indices, -1))
+                predictor = gt[snpmask][:, vcfmask]
+
+                # replace with the pruned snsp in LD
+                selected_snps = [f_snps[x] for x in snpmask]
+                
+                print ("Reduced to {:d} SNPs".format(len(snpmask)))
 
             # read the features
             features = snp_annotator.get_features(selected_snps, usefeat)

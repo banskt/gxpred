@@ -1,8 +1,8 @@
 
 import os
 
-# home = '/usr/users/fsimone'
-home = '/home/franco/cluster2'
+home = '/usr/users/fsimone'
+# home = '/home/franco/cluster2'
 gtfpath = os.path.join(home,"datasets/gtex/gencode.v19.annotation.gtf.gz")
 chrom = 12
 
@@ -24,17 +24,17 @@ chrom = 12
 parameters = []
 prior = "gxpred-bslmm"
 
-set_init_params = [[0.1, 0.0, 0.1, 0.1, 0.005]]
+# set_init_params = [[0.1, 0.0, 0.1, 0.1, 0.005]]
 # set_init_params = [[0.1, 0.0, 0.1, 0.001, 0.005]]
-# set_init_params = [[0.9, 0.0, 0.1, 0.1, 0.005]]
+set_init_params = [[0.9, 0.0, 0.1, 0.1, 0.005]]
 
 #### Set 9
-run_description = "description"
-shuffle_geno = False
+run_description = "NoPriors_soft_shuffleGT"
+shuffle_geno = True
 
 hyperpriors = [None, None, None, None, None]
 hyperparams = None #{"lambda":0.05, "Galpha":2, "Gbeta":0.5}
-cutoffs = ["newsoft"] #,"soft", "hard", "pval", "min"]
+cutoffs = ["soft"] #,"soft", "hard", "pval", "min"]
 usedists = ["nodist"] #["dhs", "nodist", "random"]
 usefeats = ["nofeat"] #["nofeat", "randomint"]
 for init_params in set_init_params:
@@ -61,6 +61,23 @@ min_snps = 200
 pval_cutoff = 0.001
 window = 1000000
 zmax = 1    # z parameter
+
+############################
+#
+# LD Settings
+#
+############################
+
+prune_LD = False
+ld_path = "/cbscratch/franco/datasets/ldscores"
+genofile_plink = "/cbscratch/franco/gtex_genotype_pipeline/genotype_split_by_chr/GTEx_450Indiv_chr"+str(chrom)+"_genot_imput_info04_maf01_HWEp1E6_ConstrVarIDs_donorIDs"
+ldstorepath = "/usr/users/fsimone/ldstore"
+
+# ld_path = "/home/franco/cbscratch/datasets/ldscores"
+# genofile_plink = "/home/franco/cbscratch/gtex_genotype_pipeline/genotype_split_by_chr/GTEx_450Indiv_chr"+str(chrom)+"_genot_imput_info04_maf01_HWEp1E6_ConstrVarIDs_donorIDs"
+# ldstorepath = "/home/franco/bin/ldstore"
+
+
 
 
 ############################
