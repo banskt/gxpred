@@ -3,11 +3,12 @@ import numpy as np
 
 class ReadPrediction:
       
-    def __init__(self, predpath, samplepath, predictor, trim=False):
+    def __init__(self, predpath, samplepath, predictor, trim=False, chrom=None):
         self._pred_path = predpath
         self._predictor = predictor #gxpred or predixcan
         self._expr_mat = None
         self._samplepath = samplepath
+        self._chrom = chrom
         self._load_samples()
         self._load_chromosomes()
         self._prev_available = False
@@ -63,8 +64,12 @@ class ReadPrediction:
     def _load_chromosomes(self):
         self._gene_names = []
         self._expr_mat = None
-               
-        for chrom in range(1,23):
+        
+        if self._chrom:
+            chroms = ['{:d}'.format(self._chrom)]
+        else:
+            chroms = ['{:d}'.format(i) for i in range(1,23)]
+        for chrom in chroms:
             success, expr_mat, gene_names = self._load_chromosome(str(chrom))
             if success:
                 if self._predictor == "gxpred":

@@ -106,6 +106,14 @@ def get_DHS_feature(snps, gene_info):
 		dist_arr.append(1/dfeat)
 	return np.array(dist_arr)
 
+def get_TSS_distance(snps, gene_info):
+	start = gene_info.start
+	dist_arr = []
+	for snp in snps:
+		dist = (snp.bp_pos - start)
+		dist_arr.append(dist)
+	return np.array(dist_arr)
+
 def get_distance_feature(selected_snps, gene, usedist):
 	nsnps_used = len(selected_snps)
 	if usedist == "dhs":

@@ -15,9 +15,9 @@ chrom = 12
 # Init_params: initial parameters for [pi, mu, sigma, sigmabg, pi]
 # Prior: prior used for causal and non-causal SNPs (sigma and sigmabg) [gxpred-mg, gxpred-mg-old, gxpred-bslmm]
 # Hyperpriors: one for each parameter [pi, mu, sigma, sigmabg, pi]
-#				None: no prior
-#				L1: L1 reg prior
-# 				S2:
+#               None: no prior
+#               L1: L1 reg prior
+#               S2:
 # Hyperparams: dictionary with parameters needed by the used hyperpriors (lambda, alpha, etc)
 
 
@@ -26,18 +26,17 @@ prior = "gxpred-bslmm"
 
 # set_init_params = [[0.1, 0.0, 0.1, 0.1, 0.005]]
 # set_init_params = [[0.1, 0.0, 0.1, 0.001, 0.005]]
-set_init_params = [[0.9, 0.0, 0.1, 0.1, 0.005]]
-# set_init_params = [[0.9, 0.0, 0.1, 0.001, 0.005]]
+set_init_params = [[0.9, 0.0, 0.1, 0.1, 0.005], [0.1, 0.0, 0.1, 0.1, 0.005]]
 
 #### Set 9
-run_description = "test_1KGannots_1000snps"
+run_description = "fullgenome"
 shuffle_geno = False
 
 hyperpriors = [None, None, None, None, None]
 hyperparams = None #{"lambda":0.05, "Galpha":2, "Gbeta":0.5}
-cutoffs = ["soft"] #,"soft", "hard", "pval", "min"]
-usedists = ["nodist"] #["dhs", "nodist", "random"]
-usefeats = ["1kg"] #["nofeat", "randomint"]
+cutoffs = ["newsoft", "soft", "hard"] #,"soft", "hard", "pval", "min"]
+usedists = ["nodist", "dhs"] #["dhs", "nodist", "random"]
+usefeats = ["1kg", "nofeat"] #["nofeat", "randomint"]
 for init_params in set_init_params:
     for cutoff in cutoffs:
         for usedist in usedists:
@@ -86,8 +85,8 @@ predicting_dataset="cardiogenics"
 reference_home = os.path.join(home,"datasets/cardiogenics/")
 p_gtpath=os.path.join(reference_home, "genotypes/CG_"+str(chrom)+".imputed.gz")
 p_samplepath=os.path.join(reference_home, "genotypes/CG.sample")
-p_pickfile = os.path.join("/cbscratch/franco/datasets","CG_"+str(chrom)+".pkl")
-p_pickfile_dev = os.path.join("/home/franco", "cbscratch/datasets","CG_"+str(chrom)+".pkl")
+p_pickfile = None
+p_pickfile_dev = None
 
 
 # Load reference expression data for cardiogenics

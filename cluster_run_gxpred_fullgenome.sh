@@ -18,33 +18,34 @@ elif [ $SPLIT -lt 1 ];
     exit;
 fi
 
-# for CHROM in `seq 1 1`
-# do
+for CHROM in `seq 1 22`
+do
 
 # CHROM="1"
 
 HOME='/usr/users/fsimone'
 ENV="${HOME}/myenv"
-LOG_SUFFIX="chr12_testruns_1kgannots"
+LOG_SUFFIX="fullgenome_chr${CHROM}"
 GXPRED="${HOME}/gxpred_annots/gxpred/learn_annotations_cluster.py"
 OUTDIR="/cbscratch/franco/datasets/gtex_models/gxpred_models_with_annots"
 # QUEUE='mpi mpi2 mpi3_all hh sa'
 RUNTIME="24:00"
-CONFIG="config_annots"
+CONFIG="config_fullgenome"
 
 
 for SECTION in `seq 0 $(($SPLIT-1))`
     do
-    echo "$SECTION"
+    echo "$CHROM -- $SECTION"
     # bsub -n 8 -q mpi -R span[hosts=1] -a openmp 
     # bsub -x -q mpi -W ${RUNTIME} -R scratch\
-    bsub -n 8 -a openmp -q mpi -W ${RUNTIME} -R span[hosts=1] -R cbscratch \
+    bsub -n 4 -a openmp -q mpi -W ${RUNTIME} -R span[hosts=1] -R cbscratch \
             -o ${OUTDIR}/section${SECTION}_${LOG_SUFFIX}.log \
             -e ${OUTDIR}/section${SECTION}_${LOG_SUFFIX}.err \
             $ENV/bin/python $GXPRED --out ${OUTDIR} \
                                     --split ${SPLIT} \
                                     --section ${SECTION} \
-                                    --config ${CONFIG}
+                                    --config ${CONFIG} \
+                                    --chr ${CHROM}
 done    
 
-# done
+done

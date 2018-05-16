@@ -9,7 +9,7 @@ from utils import gtutils
 from utils import mfunc
 import numpy as np
 import argparse
-import config_annots as config
+# import config_annots as config
 
 
 def parse_args():
@@ -22,43 +22,76 @@ def parse_args():
                         metavar='DIR',
                         help='Name of the base model directory')
 
+    parser.add_argument('--chr',
+                        type=int,
+                        dest='chrom',
+                        default=-1,
+                        metavar='CHROM',
+                        help='Chromosome number to use')
+
+    parser.add_argument('--config',
+                        type=str,
+                        dest='config_file',
+                        default="none",
+                        metavar='CONFIG',
+                        help='Config file to load')
+
     opts = parser.parse_args()
     return opts
 
 opts = parse_args()
 
 
-if not os.path.exists(config.p_pickfile):
-# Read genotype (quite slow for testing) use pickle below
-    p_oxf = ReadOxford(config.p_gtpath, config.p_samplepath, config.chrom, config.predicting_dataset)
+if opts.config_file != "none":
+    import importlib
+    config = importlib.import_module(opts.config_file)
+else:
+    import config_annots as config
+
+if opts.chrom < 0:
+    opts.chrom = config.chrom
+
+
+
+if opts.config_file != "none":
+    p_gtpath=os.path.join(config.reference_home, "genotypes/CG_"+str(opts.chrom)+".imputed.gz")
+    p_oxf = ReadOxford(p_gtpath, config.p_samplepath, opts.chrom, config.predicting_dataset)
     p_genotype = np.array(p_oxf.dosage)
     p_samplenames = p_oxf.samplenames
     p_snps = p_oxf.snps_info
     p_nsample = len(p_oxf.samplenames)
-
-    printStamp("Dumping CHR {:d} genotype".format(chrom))
-    with open(config.p_pickfile, 'wb') as output:
-        pickle.dump(p_oxf, output, pickle.HIGHEST_PROTOCOL)
 else:
-    printStamp("Reading pickled genotype")
-    with open(config.p_pickfile, 'rb') as input:
-        pickled_oxf = pickle.load(input)
+    if not os.path.exists(config.p_pickfile):
+        # Read genotype (quite slow for testing) use pickle below
+        p_oxf = ReadOxford(config.p_gtpath, config.p_samplepath, opts.chrom, config.predicting_dataset)
+        p_genotype = np.array(p_oxf.dosage)
+        p_samplenames = p_oxf.samplenames
+        p_snps = p_oxf.snps_info
+        p_nsample = len(p_oxf.samplenames)
 
-    printStamp("Done reading")
+        printStamp("Dumping CHR {:d} genotype".format(chrom))
+        with open(config.p_pickfile, 'wb') as output:
+            pickle.dump(p_oxf, output, pickle.HIGHEST_PROTOCOL)
+    else:
+        printStamp("Reading pickled genotype")
+        with open(config.p_pickfile, 'rb') as input:
+            pickled_oxf = pickle.load(input)
 
-    p_genotype = np.array(pickled_oxf.dosage)
-    p_samplenames = pickled_oxf.samplenames
-    p_snps = pickled_oxf.snps_info
-    p_nsample = len(pickled_oxf.samplenames)
+        printStamp("Done reading")
+
+        p_genotype = np.array(pickled_oxf.dosage)
+        p_samplenames = pickled_oxf.samplenames
+        p_snps = pickled_oxf.snps_info
+        p_nsample = len(pickled_oxf.samplenames)
 
 
 modelpath = opts.dir
 
-outfileprefix = os.path.join(modelpath,"pred_chr"+str(config.chrom))
+outfileprefix = os.path.join(modelpath,"pred_chr"+str(opts.chrom))
 
 printStamp("Predicting for "+modelpath)
 # Write predictions for each model
-p_model = ReadModel(modelpath, config.chrom)
+p_model = ReadModel(modelpath, opts.chrom)
 p_genes = p_model.genes
 gx = list()
 for gene in p_genes:

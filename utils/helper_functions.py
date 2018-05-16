@@ -51,7 +51,7 @@ def load_target_genes(genelistfile, gene_info, chrom=None, chroms=range(1,23)):
 def write_r2_dataframe(modelpath, chrom, prior, r_values, prediction_obj, overwrite=False):
     import pandas as pd
 
-    outtable = os.path.join(modelpath, "genes_r2.txt")
+    outtable = os.path.join(modelpath, "genes_r2_"+str(chrom)+".txt")
     if not os.path.exists(outtable) or overwrite:
         # Read genes.txt table with learned parameters and fix some columns and row namings
         learning_table = os.path.join(modelpath, "chr{:d}".format(chrom), "genes.txt")

@@ -10,7 +10,7 @@ import math
 import pickle
 from utils.printstamp import printStamp
 
-import config_annots as config
+# import config_annots as config
 import argparse
 
 
@@ -24,11 +24,34 @@ def parse_args():
                         metavar='DIR',
                         help='Name of the base model directory')
 
+    parser.add_argument('--chr',
+                        type=int,
+                        dest='chrom',
+                        default=-1,
+                        metavar='CHROM',
+                        help='Chromosome number to use')
+
+    parser.add_argument('--config',
+                    type=str,
+                    dest='config_file',
+                    default="none",
+                    metavar='CONFIG',
+                    help='Config file to load')
+
     opts = parser.parse_args()
     return opts
 
 opts = parse_args()
 
+
+if opts.config_file != "none":
+    import importlib
+    config = importlib.import_module(opts.config_file)
+else:
+    import config_annots as config
+
+if opts.chrom < 0:
+    opts.chrom = config.chrom
 
 # Load reference dataset Gene Expression
 reference_rpkm = ReadRPKM(config.reference_expdatapath, config.predicting_dataset)
@@ -37,7 +60,7 @@ reference_expr_donors = reference_rpkm.donor_ids
 reference_gene_names = reference_rpkm.gene_names
 
 # use the selected_gene_ids with high R² values as targets, only those in the selected chrom will appear
-gene_info = readgtf.gencode_v12(config.gtfpath, trim=True, include_chrom=config.chrom)
+gene_info = readgtf.gencode_v12(config.gtfpath, trim=True, include_chrom=opts.chrom)
 
 target_genelist = [g.ensembl_id for g in gene_info]
 target_donors = reference_expr_donors
@@ -47,7 +70,7 @@ print("There are {:d} genes in gencode".format(len(target_genelist)))
 ### Predixcan assessment ###
 
 if not os.path.exists(config.predixcan_pickfile):
-    predixcanpred = ReadPrediction(config.pxpred_predpath, config.reference_samplepath, "predixcan", trim=True)
+    predixcanpred = ReadPrediction(config.pxpred_predpath, config.reference_samplepath, "predixcan", trim=True, chrom=opts.chrom)
 
     if len(predixcanpred.gene_names) > 0:
         printStamp("Dumping Predixcan prediction")
@@ -81,7 +104,7 @@ modelpath = opts.dir
 print(modelpath)
 
 gxpred_predpath = os.path.join(modelpath)
-gxpred = ReadPrediction(gxpred_predpath, config.reference_samplepath, "gxpred", trim=True)
+gxpred = ReadPrediction(gxpred_predpath, config.reference_samplepath, "gxpred", trim=True, chrom=opts.chrom)
 
 # filter gxpred predicted values
 gxpred.sort_by_gene(cardiobase_gene_names)
@@ -100,5 +123,5 @@ sorted_expression = reference_expression[ix_genes,:][:, ix_samples].T
 # Calculate Pearson correlation
 gxpred_r = pearson_corr_rowwise(gxpred.sorted_expr_mat.T, sorted_expression.T)
 
-write_r2_dataframe(modelpath, config.chrom, "predixcan", predixcan_r, predixcanpred, overwrite=True)
-write_r2_dataframe(modelpath, config.chrom, "gxpred-bslmm", gxpred_r, gxpred)
+write_r2_dataframe(modelpath, opts.chrom, "predixcan", predixcan_r, predixcanpred, overwrite=True)
+write_r2_dataframe(modelpath, opts.chrom, "gxpred-bslmm", gxpred_r, gxpred)

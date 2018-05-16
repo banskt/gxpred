@@ -1,8 +1,8 @@
 
 import os
 
-home = '/usr/users/fsimone'
-# home = '/home/franco/cluster2'
+# home = '/usr/users/fsimone'
+home = '/home/franco/cluster2'
 gtfpath = os.path.join(home,"datasets/gtex/gencode.v19.annotation.gtf.gz")
 chrom = 12
 
@@ -15,9 +15,9 @@ chrom = 12
 # Init_params: initial parameters for [pi, mu, sigma, sigmabg, pi]
 # Prior: prior used for causal and non-causal SNPs (sigma and sigmabg) [gxpred-mg, gxpred-mg-old, gxpred-bslmm]
 # Hyperpriors: one for each parameter [pi, mu, sigma, sigmabg, pi]
-#				None: no prior
-#				L1: L1 reg prior
-# 				S2:
+#               None: no prior
+#               L1: L1 reg prior
+#               S2:
 # Hyperparams: dictionary with parameters needed by the used hyperpriors (lambda, alpha, etc)
 
 
@@ -27,10 +27,9 @@ prior = "gxpred-bslmm"
 # set_init_params = [[0.1, 0.0, 0.1, 0.1, 0.005]]
 # set_init_params = [[0.1, 0.0, 0.1, 0.001, 0.005]]
 set_init_params = [[0.9, 0.0, 0.1, 0.1, 0.005]]
-# set_init_params = [[0.9, 0.0, 0.1, 0.001, 0.005]]
 
 #### Set 9
-run_description = "test_1KGannots_1000snps"
+run_description = "test_1KGannots"
 shuffle_geno = False
 
 hyperpriors = [None, None, None, None, None]
@@ -56,6 +55,7 @@ gtex_gtpath = os.path.join(home, "datasets/gtex/GTEx_450Indiv_genot_imput_info04
 # gtex_rpkmpath = os.path.join(home, "datasets/gtex/gtex_wholeblood_normalized.expression.txt")
 gtex_rpkmpath = os.path.join(home, "datasets/gtex/gtex_wholeblood_normalized.lm_corr.exp.klinikum.txt")
 # gtex_rpkmpath = os.path.join(home, "datasets/gtex/gtex_wholeblood_normalized.lm_corr_final2.exp.txt")
+learn_pickfile_dev = os.path.join("/home/franco", "cbscratch/datasets","GTEx_v6p_chr"+str(chrom)+".pkl")
 
 min_snps = 200
 pval_cutoff = 0.001
@@ -71,9 +71,9 @@ annot1kg_dir = os.path.join(home, "datasets/1KG_annots")
 ############################
 
 prune_LD = False
-ld_path = "/cbscratch/franco/datasets/ldscores"
-genofile_plink = "/cbscratch/franco/gtex_genotype_pipeline/genotype_split_by_chr/GTEx_450Indiv_chr"+str(chrom)+"_genot_imput_info04_maf01_HWEp1E6_ConstrVarIDs_donorIDs"
-ldstorepath = "/usr/users/fsimone/ldstore"
+ld_path = "/home/franco/cbscratch/datasets/ldscores"
+genofile_plink = "/home/franco/cbscratch/gtex_genotype_pipeline/genotype_split_by_chr/GTEx_450Indiv_chr"+str(chrom)+"_genot_imput_info04_maf01_HWEp1E6_ConstrVarIDs_donorIDs"
+ldstorepath = "/home/franco/bin/ldstore"
 
 
 ############################
@@ -96,7 +96,7 @@ reference_samplepath=os.path.join(reference_home, "genotypes/CG.sample")
 
 
 # Predixcan prediction path
-pred_basedir = "/cbscratch/franco/datasets"
+pred_basedir = os.path.join("/home/franco/cbscratch/datasets")
 pxpred_predpath = os.path.join(pred_basedir, "cardiogenics/predixcan_predictions_klinikum")
 # pxpred_predpath = os.path.join(pred_basedir, "cardiogenics/predixcan_predictions_klinikum_lmcorr_expr_random")
 predixcan_pickfile = os.path.join(pred_basedir,"Predixcan.pkl")

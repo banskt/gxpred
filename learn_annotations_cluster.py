@@ -19,8 +19,10 @@ from utils.printstamp import printStamp
 from utils.helper_functions import write_params
 from sklearn.preprocessing import scale
 from iotools import snp_annotator
+from collections import defaultdict
+import gzip
 
-import config_annots as config
+# import config_annots as config
 
 
 def parse_args():
@@ -45,6 +47,20 @@ def parse_args():
                         metavar='SECTION',
                         help='Selects which batch to run, must be between 0 and SPLIT-1')
 
+    parser.add_argument('--chr',
+                        type=int,
+                        dest='chrom',
+                        default=-1,
+                        metavar='CHROM',
+                        help='Chromosome number to use')
+
+    parser.add_argument('--config',
+                        type=str,
+                        dest='config_file',
+                        default="none",
+                        metavar='CONFIG',
+                        help='Config file to load')
+
     # parser.add_argument('--dist',
     #                     type=str,
     #                     dest='dist',
@@ -57,16 +73,30 @@ def parse_args():
 
 opts = parse_args()
 
+if opts.config_file != "none":
+    import importlib
+    config = importlib.import_module(opts.config_file)
+else:
+    import config_annots as config
+
+if opts.chrom < 0:
+    opts.chrom = config.chrom
+
 if opts.section != None and opts.split != None and opts.section > opts.split:
     raise Exception("SECTION number cannot be greater than number of available batches to run (SPLIT)")
 
 
 # Annotation (use complete gene name in gtf without trimming the version)
 # load annotation for whole genome
-gene_info = readgtf.gencode_v12(config.gtfpath, include_chrom = config.chrom, trim=False)
+gene_info = readgtf.gencode_v12(config.gtfpath, include_chrom = opts.chrom, trim=False)
 
 # read Genotype
-oxf = ReadOxford(config.gtex_gtpath, config.gtex_samplepath, config.chrom, config.learning_dataset)
+
+if opts.config_file != "none":
+    gtex_gtpath = os.path.join(config.home, "datasets/gtex/GTEx_450Indiv_genot_imput_info04_maf01_HWEp1E6_dbSNP135IDs_donorIDs_dosage_chr"+str(opts.chrom)+".gz")
+    oxf = ReadOxford(gtex_gtpath, config.gtex_samplepath, opts.chrom, config.learning_dataset)
+else:
+    oxf = ReadOxford(config.gtex_gtpath, config.gtex_samplepath, opts.chrom, config.learning_dataset)
 genotype = np.array(oxf.dosage)
 samplenames = oxf.samplenames
 snps = oxf.snps_info
@@ -119,7 +149,20 @@ for p in config.parameters:
 
     write_params(modelpath, p)
 
-    model = WriteModel(modelpath, config.chrom)
+    model = WriteModel(modelpath, opts.chrom)
+
+    # Load rsid dictionary
+    annot_dict = defaultdict(list)
+    if usefeat == "1kg":
+        annotfile = os.path.join(config.annot1kg_dir, "1KG."+str(opts.chrom)+".annot.gz")
+        print(annotfile)
+        with gzip.open(annotfile, 'r') as instream:
+            _ = instream.readline()
+            for line in instream:
+                arr = line.decode().strip().split(" ")
+                rsid = arr[0]
+                annots = list(map(int, arr[1:]))
+                annot_dict[rsid] = annots
 
     for i, gene in enumerate(genes):
 
@@ -171,7 +214,22 @@ for p in config.parameters:
                 print ("Reduced to {:d} SNPs".format(len(snpmask)))
 
             # read the features
-            features = snp_annotator.get_features(selected_snps, usefeat)
+            if usefeat == "1kg":
+                nsnps_used = len(selected_snps)
+                feature0 = np.ones((nsnps_used, 1))
+                
+                current_annot = list()
+                for snp in selected_snps:
+                    if len(annot_dict[snp.varid]) > 0:
+                        current_annot.append(annot_dict[snp.varid])
+                    else:
+                        current_annot.append([0,0,0,0,0])
+                        print("not found {:s}!".format(snp.varid))
+                feature1kg = np.array(current_annot)
+
+                features = np.concatenate((feature0, feature1kg), axis=1)
+            else:
+                features = snp_annotator.get_features(selected_snps, usefeat)
 
             # Get DHS distance feature
             dist_feature = snp_annotator.get_distance_feature(selected_snps, gene, usedist)
@@ -210,7 +268,7 @@ for p in config.parameters:
 
             if emp_bayes.success:
                 res = emp_bayes.params
-                res[4] = 1 / np.sqrt(res[4])
+                res[nfeat + 3] = 1 / np.sqrt(res[nfeat + 3])
 
                 print(res)
                 # print("PI: \t",res[0])
