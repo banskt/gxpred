@@ -40,12 +40,6 @@ class LinRegAssociation:
         select = np.where(self._pvals < self._pval_cutoff)[0]
         if self._cutoff == "soft":
             nselect = max(select.shape[0], self._min_snps)
-        if self._cutoff == "newsoft":
-            nselect = max(select.shape[0], 20)
-        if self._cutoff == "pval":
-            nselect = select.shape[0]
-        if self._cutoff == "min":
-            nselect = self._min_snps
         if self._cutoff == "hard":
             nselect = min(select.shape[0], self._min_snps)
         return self._ordered_indices[:nselect]

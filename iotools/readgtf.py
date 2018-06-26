@@ -8,12 +8,15 @@ import os
 import numpy as np
 import gzip
 from utils.containers import GeneInfo
+from utils.logs import MyLogger
 
 
 def gencode_v12(filepath, feature = 'gene', trim=False, biotype=['protein_coding'], include_chrom = 0, include_chroms=['{:d}'.format(x + 1) for x in range(22)]):
     annotfile = os.path.realpath(filepath)
     geneinfo = list()
+    logger = MyLogger(__name__)
     try:
+        logger.info("Reading GTF file")
         with gzip.open(annotfile, 'r') as mfile:
             for line in mfile:
                 linesplit = line.decode().strip().split('\t')

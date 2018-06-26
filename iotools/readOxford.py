@@ -6,8 +6,8 @@ import sys
 import os
 import gzip
 from collections import defaultdict
-from utils.printstamp import printStamp
-
+# from utils.printstamp import printStamp
+from utils.logs import MyLogger
 
 # Parse data from dosage files
 import collections
@@ -27,13 +27,15 @@ class ReadOxford:
     _nsample = 0
 
 
-    def __init__(self, gtfile, samplefile, chrom, dataset, nlocilimit=-1):
+    def __init__(self, gtfile, samplefile, chrom, dataset, nlocilimit=199):
         self._chrom = chrom
         self._gtfile = gtfile
         self._samplefile = samplefile
         self._dataset = dataset
         self._nlocilimit = nlocilimit
+        self.logger = MyLogger(__name__)
         self._read_genotypes()
+
 
         
     @property
@@ -53,17 +55,17 @@ class ReadOxford:
     @property
     def snps_info(self):
         self._read_genotypes()
-        return tuple(self._snps_info)
+        return self._snps_info
 
     @property
     def nsnps(self):
         self._run_once()
-        return tuple(self._nsnps)
+        return self._nsnps
 
     @property
     def dosage(self):
         self._read_genotypes()
-        return tuple(self._dosage)
+        return self._dosage
 
     # @property
     # def genotype(self):
@@ -97,7 +99,6 @@ class ReadOxford:
         with gzip.open(self._gtfile, 'r') as filereader:
             for snpline in filereader:
                 self._nloci += 1
-                # print('reading '+str(self._nloci)+' snps, size of dosages is '+str(sys.getsizeof(dosage)), end='\r')
                 mline = snpline.split()
                 
                 ngenotypes = (len(mline) - 5) / 3
@@ -140,7 +141,6 @@ class ReadOxford:
         with gzip.open(self._gtfile, 'r') as filereader:
             for snpline in filereader:
                 self._nloci += 1
-                # print('reading '+str(self._nloci)+' snps, size of dosages is '+str(sys.getsizeof(dosage)), end='\r')
                 mline = snpline.split()
                 
                 ngenotypes = len(mline) - 6
@@ -179,15 +179,15 @@ class ReadOxford:
         allsnps = list()
         # genotype = list()
 
-        printStamp("started reading genotype")
+        self.logger.info("Reading genotype")
 
         if self._dataset == "cardiogenics":
             allsnps, dosage = self._read_cardiogenics()
         if self._dataset == "gtex":
             allsnps, dosage = self._read_gtex()
     
-        print("Read "+str(self._nloci)+" snps in "+str(self._nsample)+" samples.",end='\n')
-        printStamp("Finished readings snps")
+        self.logger.info("Read "+str(self._nloci)+" snps from "+str(self._nsample)+" samples.")
+        self.logger.info("Finished reading genotype")
         self._dosage = np.array(dosage)
         # self._genotype = genotype
         self._snps_info = allsnps
@@ -213,7 +213,7 @@ class ReadOxford:
 
     def write_dosages(self, outfile, format="predixcan"):
         if not self._read_genotype_once:
-            raise ValueError("No dosages to write. Run read_genotypes first.",end='\n')
+            raise ValueError("No dosages to write. Run read_genotypes first.")
         print("Writing dosages to file "+outfile)
 
         if format == "predixcan":

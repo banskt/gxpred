@@ -45,7 +45,7 @@ vecT_smat_vec ( int n, double* v, double* A, double* D )
     res = cblas_ddot(n, v, 1, D, 1);
 
     return res;
-}		/* -----  end of function vecT_smat_vec  ----- */
+}       /* -----  end of function vecT_smat_vec  ----- */
 
 
 /* 
@@ -68,7 +68,7 @@ vecAT_smat_vecB ( int n, double* v, double* A, double* w, double* D )
 
     return res;
 
-}		/* -----  end of function vecAT_smat_vecB  ----- */
+}       /* -----  end of function vecAT_smat_vecB  ----- */
 
 
 /* 
@@ -85,7 +85,7 @@ a_mat_matT ( int m, int n, double alpha, double* A, double* C )
     double zero = 0.0;
     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans, m, m, n, alpha, A, n, A, n, zero, C, m);
 
-}		/* -----  end of function a_mat_matT  ----- */
+}       /* -----  end of function a_mat_matT  ----- */
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -124,7 +124,7 @@ a_matT_matb_mat ( int m, int n, double alpha, double* A, double* B, double* C, d
     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m, n, m, one,   B, m, A, n, zero, D, n);
     cblas_dgemm(CblasRowMajor, CblasTrans,   CblasNoTrans, n, n, m, alpha, A, n, D, n, zero, C, n);
     
-}		/* -----  end of function a_matT_matb_mat  ----- */
+}       /* -----  end of function a_matT_matb_mat  ----- */
 
 
 /* 
@@ -143,7 +143,7 @@ smat_vec ( int n, double* A, double* w, double* D )
     double one  = 1.0;
     cblas_dsymv(CblasRowMajor, CblasLower, n, one, A, n, w, 1, zero, D, 1);
 
-}		/* -----  end of function smat_vec  ----- */
+}       /* -----  end of function smat_vec  ----- */
 
 
 /* 
@@ -161,7 +161,7 @@ mat_vec ( int m, int n, double alpha, double* A, double* w, double* D )
     double zero = 0.0;
     cblas_dgemv(CblasRowMajor, CblasNoTrans, m, n, alpha, A, n, w, 1, zero, D, 1);
 
-}		/* -----  end of function mat_vec  ----- */
+}       /* -----  end of function mat_vec  ----- */
 
 
 
@@ -185,7 +185,7 @@ mat_trace ( int n, double* A )
 
     return trace;
 
-}		/* -----  end of function mat_trace  ----- */
+}       /* -----  end of function mat_trace  ----- */
 
 
 /* 
@@ -209,7 +209,7 @@ logdet_inverse_of_mat ( int n, double* A, double tau, double sigmabg2, double* l
     if ( info != 0 ) {
         printf ("C Error: Cholesky factorization failed with errorcode %d.\n", info);
         *logdet = 0.0;
-	return false;
+    return false;
     }
 
     *logdet = 0.0;
@@ -221,19 +221,19 @@ logdet_inverse_of_mat ( int n, double* A, double tau, double sigmabg2, double* l
     info = LAPACKE_dpotri (LAPACK_ROW_MAJOR, 'L', n, A, n);
 
     if (info != 0) {
-	printf ("C Error: Matrix inversion failed.\n");
+    printf ("C Error: Matrix inversion failed.\n");
         return false;
     }
 
     // succesful inversion. overwrite the upper half
     for (i = 0; i < n; i++) {
         for (j = i+1; j < n; j++) {
-	    A[ i*n+j ] = A[ j*n+i ];
+        A[ i*n+j ] = A[ j*n+i ];
         }
     }
 
     return true;
-}		/* -----  end of function logdet_inverse_of_mat  ----- */
+}       /* -----  end of function logdet_inverse_of_mat  ----- */
 
 
 /* 
@@ -264,7 +264,7 @@ binv_update ( int nsnps, int zpos, double mod, double* B, double* Drow, double* 
         }
     }
 
-}		/* -----  end of function binv_update  ----- */
+}       /* -----  end of function binv_update  ----- */
 
 
 
@@ -294,12 +294,8 @@ get_zcomps ( int nsnps, int nsample, int zlen,
     double  logSZdet;
     double  nterm;
     double  mod_denom, mod;
-    double  log_probz;
-    double  log_probz0;
     double  log_normz;
     bool    success;
-    bool    PI_normal;
-    bool    go_to_hell;
     bool    this_is_causal;
     bool    initialize_logk;
     double  logk;
@@ -310,6 +306,7 @@ get_zcomps ( int nsnps, int nsample, int zlen,
     double* GX_MZ;                              // length of N
     int*    Z_CASES;   
     bool*   ZCOMPS_DEFINED;
+    double* LOG_PROBZ;
 
     double  *DUM1, *DUM2, *DUM3, *DUM4;
 
@@ -336,6 +333,9 @@ get_zcomps ( int nsnps, int nsample, int zlen,
 
     ZCOMPS_DEFINED = (bool *)mkl_malloc(    zlen * sizeof( bool ), 64 );
     if (ZCOMPS_DEFINED == NULL)  {success = false; goto cleanup_zcomps_ZCOMPS_DEFINED;}
+
+    LOG_PROBZ = (double *)mkl_malloc(    zlen * sizeof( double ), 64 );
+    if (LOG_PROBZ == NULL)  {success = false; goto cleanup_zcomps_LOG_PROBZ;}
 
     if (debug) {
         printf ( "Succesfully allocated memories for internal ZCOMPS.\n" );
@@ -365,142 +365,80 @@ get_zcomps ( int nsnps, int nsample, int zlen,
     success = logdet_inverse_of_mat(nsnps, B_INV, tau, sigmabg2, &logB0det);
 
     if (success == false) {
-	goto cleanup_zcomps;
+    goto cleanup_zcomps;
+    }
+
+    if (debug) {
+        printf ( "logB0det calculated.\n" );
     }
 
     for (i = 0; i < (nsnps*nsnps); i++) {
         BZINV[i] = B_INV[i];
     }
 
-    log_probz0 = 0.0;
-    PI_normal = true;
-    for (i = 0; i < nsnps; i++) {
-        if ( PI[i] < 1.0 & PI[i] > 0 ) {
-            log_probz0 += log(1 - PI[i]);
-            // printf("PI[%d]: %f\n", i, PI[i]);
-        } else {
-            // For this analysis, use conditions
-            // PI = 0:
-            // PI = 1:
-            // and look at them later
-            // printf("--->PI[%d]: %f\n", i, PI[i]);
-            PI_normal = false;
-        }
-    }
+    zindx = 0;
 
-    if (PI_normal) {
-
-        for (z = 0; z < zlen; z++) {
-            ZCOMPS_DEFINED[z] = true;
-        }
-
-        zindx = 0;
-
-        for (z = 0; z < zlen; z++) {
-      
-            nz = ZNORM[z];
-
-            for (i = 0; i < (nsnps*nsnps); i++) {
-                B_INV[i] = BZINV[i];
-            }
-            for (i = 0; i < nsample; i++) {
-                GX_MZ[i] = GX[i];
-            }
-            logBZdet = logB0det;
-
-            log_probz = log_probz0;
-            for (i = 0; i < nz; i++) {
-                zpos = ZARR[zindx + i];
-                mod_denom = 1 + hdiff * B_INV[ zpos*nsnps + zpos ];
-                mod = hdiff / mod_denom;
-                logBZdet += log(mod_denom);
-                binv_update(nsnps, zpos, mod, B_INV, DUM1, DUM2);
-                for (j = 0; j < nsample; j++) {
-                    GX_MZ[j] -= mu * GT[ zpos*nsample + j ];
-                }
-                log_probz += log(PI[zpos] / (1 - PI[zpos]));
-            }
-            
-    //      No need to initialize S_INV, because it will be overwritten.
-    //      DUM3 is a nsnps-by-nsample matrix which is only used as a scratch
-            a_matT_matb_mat ( nsnps, nsample, (-tau*tau), GT, B_INV, S_INV, DUM3 );
-            for (i = 0; i < nsample; i++) {
-                S_INV[ i*nsample + i ] += tau;
-            }
-            logSZdet = - (nsample * log(tau)) + ((nsnps - nz) * log(sigmabg2)) + (nz * log(sigma2 + sigmabg2)) + logBZdet;
-            nterm = vecT_smat_vec ( nsample, GX_MZ, S_INV, DUM4 );
-
-            log_normz = - 0.5 * (logSZdet + (nsample * log(2 * _PI)) + nterm);
-            
-            ZCOMPS[z] = log_probz + log_normz;
-
-            for (i = 0; i < (nsnps*nsnps); i++) {
-                BZINV[ (unsigned long)z*nsnps*nsnps + i ] = B_INV[i];
-            }
-
-            for (i = 0; i < (nsample*nsample); i++) {
-                SZINV[ (unsigned long)z*nsample*nsample + i ] = S_INV[i];
-            }
-            
-            zindx += nz;
-        
-        }
-    }
-    else {
-        zindx = 0;
-
-        for (z = 0; z < zlen; z++) {
-            ZCOMPS_DEFINED[z] = false;
-        }
-
-        for (z = 0; z < zlen; z++) {
-      
-            nz = ZNORM[z];
-
-            log_probz = 0.0;
-            go_to_hell = false;
-
-            for (i = 0; i < (nsnps*nsnps); i++) {
-                B_INV[i] = BZINV[i];
-            }
-            for (i = 0; i < nsample; i++) {
-                GX_MZ[i] = GX[i];
-            }
-            logBZdet = logB0det;
-
-            for (i = 0; i < nsnps; i++) {
-                // python equivalent: if i not in ZARR[zindx: (zindx + nz)]
-                this_is_causal = false;
-                for (j = 0; j < nz; j++) {
-                    zpos = ZARR[zindx + j];
-                    if (i == zpos) {
-                        this_is_causal = true;
-                    }
-                }
-                if ( ! this_is_causal ) {
-                    if (PI[i] < 1.0) {
-                        log_probz += log(1 - PI[i]);
-                    } else {
-                        go_to_hell = true; // PI = 1, z = 0
-                    }
+    for (z = 0; z < zlen; z++) {
+        nz = ZNORM[z];
+        LOG_PROBZ[z] = 0.0;
+        ZCOMPS_DEFINED[z] = true;
+        for (i = 0; i < nsnps; i++) {
+            // python equivalent: if i not in ZARR[zindx: (zindx + nz)]
+            this_is_causal = false;
+            for (j = 0; j < nz; j++) {
+                zpos = ZARR[zindx + j];
+                if (i == zpos) {
+                    this_is_causal = true;
                 }
             }
-
-            for (i = 0; i < nz; i++) {
-                zpos = ZARR[zindx + i];
-                mod_denom = 1 + hdiff * B_INV[ zpos*nsnps + zpos ];
-                mod = hdiff / mod_denom;
-                logBZdet += log(mod_denom);
-                binv_update(nsnps, zpos, mod, B_INV, DUM1, DUM2);
-                for (j = 0; j < nsample; j++) {
-                    GX_MZ[j] -= mu * GT[ zpos*nsample + j ];
-                }
-                if (PI[i] > 0.0) {
-                    log_probz += log(PI[i]);
+            if ( ! this_is_causal ) {
+                if (PI[i] < 1.0) {
+                   LOG_PROBZ[z] += log(1 - PI[i]);
                 } else {
-                    go_to_hell = true; // PI = 0, z = 1
+                    // go_to_hell = true; // PI = 1, z = 0
+                    ZCOMPS_DEFINED[z] = false;
+                    break;
                 }
+            } else { // is causal
+                if (PI[i] > 0.0) {
+                    LOG_PROBZ[z] += log(PI[i]);
+                } else {
+                    // go_to_hell = true; // PI = 0, z = 1
+                    ZCOMPS_DEFINED[z] = false;
+                    break;
+                }
+            }
+        }
+        zindx += nz;
+    }
 
+    zindx = 0;
+
+
+
+    for (z = 0; z < zlen; z++) {
+
+        if (ZCOMPS_DEFINED[z]) {
+  
+            nz = ZNORM[z];
+
+            for (i = 0; i < (nsnps*nsnps); i++) {
+                B_INV[i] = BZINV[i];
+            }
+            for (i = 0; i < nsample; i++) {
+                GX_MZ[i] = GX[i];
+            }
+            logBZdet = logB0det;
+
+            for (i = 0; i < nz; i++) {
+                zpos = ZARR[zindx + i];
+                mod_denom = 1 + hdiff * B_INV[ zpos*nsnps + zpos ];
+                mod = hdiff / mod_denom;
+                logBZdet += log(mod_denom);
+                binv_update(nsnps, zpos, mod, B_INV, DUM1, DUM2);
+                for (j = 0; j < nsample; j++) {
+                    GX_MZ[j] -= mu * GT[ zpos*nsample + j ];
+                }
             }
             
     //      No need to initialize S_INV, because it will be overwritten.
@@ -514,12 +452,7 @@ get_zcomps ( int nsnps, int nsample, int zlen,
 
             log_normz = - 0.5 * (logSZdet + (nsample * log(2 * _PI)) + nterm);
             
-            if (go_to_hell) {
-                ZCOMPS_DEFINED[z] = false;
-            } else {
-                ZCOMPS_DEFINED[z] = true;
-                ZCOMPS[z] = log_probz + log_normz;
-            }
+            ZCOMPS[z] = LOG_PROBZ[z] + log_normz;
 
             for (i = 0; i < (nsnps*nsnps); i++) {
                 BZINV[ (unsigned long)z*nsnps*nsnps + i ] = B_INV[i];
@@ -530,9 +463,12 @@ get_zcomps ( int nsnps, int nsample, int zlen,
             }
             
             zindx += nz;
-        
+        }
+        else {
+            printf("ZCOMPS_DEFINED[%d]: %d\n", z, ZCOMPS_DEFINED[z]);
         }
     }
+  
 
     // ZCOMPS holds the values of log [ P(z|theta) * N(y|m_yz,S_yz) ] for each Z-state (numerator in log P(z|X,y,theta,tau))
 
@@ -596,7 +532,12 @@ get_zcomps ( int nsnps, int nsample, int zlen,
         printf ( "ZCOMPS updated.\n" );
     }
 
+
+
 cleanup_zcomps:
+cleanup_zcomps_LOG_PROBZ:
+    mkl_free(LOG_PROBZ);
+
 cleanup_zcomps_ZCOMPS_DEFINED:
     mkl_free(ZCOMPS_DEFINED);
 
@@ -622,7 +563,7 @@ cleanup_zcomps_B_INV:
     mkl_free(B_INV);
 
     return success;
-}		/* -----  end of function zcomps  ----- */
+}       /* -----  end of function zcomps  ----- */
 
 
 
@@ -850,7 +791,7 @@ get_grad ( int nsnps, int nsample, int zlen, int nfeat,
     mkl_free(DSINV_DSIGMABG);
     mkl_free(DSINV_DTAU);
 
-}		/* -----  end of function get_grad  ----- */
+}       /* -----  end of function get_grad  ----- */
 
 
 /* 
@@ -939,7 +880,7 @@ get_zexp ( int nsnps, int nsample, int zlen,
     mkl_free(FACT0);
     mkl_free(FACTZ);
 
-}		/* -----  end of function get_zexp  ----- */
+}       /* -----  end of function get_zexp  ----- */
 
 
 /* 
@@ -1035,4 +976,4 @@ cleanup_main_BZINV:
     
     return success;
 
-}		/* -----  end of function logmarglik  ----- */
+}       /* -----  end of function logmarglik  ----- */

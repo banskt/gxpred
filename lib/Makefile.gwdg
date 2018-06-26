@@ -1,24 +1,25 @@
-CC := gcc
-CP := g++
-LIBFLAGS := -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_ilp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread -lm -ldl
+CC := icc
+CP := icpc
+LIBFLAGS := -L${MKLROOT}/lib/intel64 -lmkl_intel_ilp64 -lmkl_intel_thread -lmkl_sequential -lmkl_core -liomp5 -lpthread -lm -ldl -std=c99
+INCLUDEFLAGS := -DMKL_ILP64 -I${MKLROOT}/include
 SHAREFLAGS := -O3 -shared -fPIC
 
 all: logmarglik.so logmarglik_bslmm.so zstates.so linear_regression.so logmarglik_bslmm_fixedPI.so logmarglik_bslmm_fixedPI_refactor.so
 
 logmarglik.so: logmarglik.c
-	$(CC) $< $(LIBFLAGS) $(SHAREFLAGS) -o $@
+	$(CC) $< $(LIBFLAGS) $(SHAREFLAGS) $(INCLUDEFLAGS) -o $@
 
 logmarglik_bslmm.so: logmarglik_bslmm.c
-	$(CC) $< $(LIBFLAGS) $(SHAREFLAGS) -o $@
+	$(CC) $< $(LIBFLAGS) $(SHAREFLAGS) $(INCLUDEFLAGS) -o $@
 
 logmarglik_bslmm_fixedPI.so: logmarglik_bslmm_fixedPI.c
-	$(CC) $< $(LIBFLAGS) $(SHAREFLAGS) -o $@
+	$(CC) $< $(LIBFLAGS) $(SHAREFLAGS) $(INCLUDEFLAGS) -o $@
 
 zstates.so: zstates_py.cpp
 	$(CP) $< $(SHAREFLAGS) -o $@
 
 linear_regression.so: linear_regression.c
-	$(CC) $< $(SHAREFLAGS) -o $@
+	$(CC) $< $(SHAREFLAGS) $(INCLUDEFLAGS) -o $@
 
 clean:
 	rm -rf zstates.so logmarglik.so linear_regression.so logmarglik_bslmm.so logmarglik_bslmm_fixedPI.so

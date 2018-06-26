@@ -182,10 +182,11 @@ for p in config.parameters:
             predictor = gt[cismask][:, vcfmask]
             snpmask = cismask
 
-            # if number of cis SNPs > threshold, use p-value cut-off
+            # later used for LD prunning, but needed before removing some cis-snps
             min_pos = f_snps[cismask[0]].bp_pos - 1000
             max_pos = f_snps[cismask[-1]].bp_pos + 1000
-            
+
+            # if number of cis SNPs > threshold, use p-value cut-off          
             if len(cismask) > config.min_snps:
                 assoc_model = LinRegAssociation(predictor, target, config.min_snps, config.pval_cutoff, cutoff)
                 pvalmask = cismask[assoc_model.selected_variables]
