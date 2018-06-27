@@ -27,7 +27,7 @@ class ReadOxford:
     _nsample = 0
 
 
-    def __init__(self, gtfile, samplefile, chrom, dataset, nlocilimit=199):
+    def __init__(self, gtfile, samplefile, chrom, dataset, nlocilimit=-1):
         self._chrom = chrom
         self._gtfile = gtfile
         self._samplefile = samplefile
