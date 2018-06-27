@@ -25,7 +25,7 @@ fi
 
 HOME='/usr/users/fsimone'
 ENV="${HOME}/myenv"
-LOG_SUFFIX="chr12_testruns_1kgannots"
+LOG_SUFFIX="chr12_testruns_1kgannots_fixedPI"
 GXPRED="${HOME}/gxpred_annots/gxpred/learn_annotations_cluster.py"
 OUTDIR="/cbscratch/franco/datasets/gtex_models/gxpred_models_with_annots"
 # QUEUE='mpi mpi2 mpi3_all hh sa'

@@ -29,14 +29,14 @@ prior = "gxpred-bslmm"
 set_init_params = [[0.9, 0.0, 0.1, 0.1, 0.005]]
 
 #### Set 9
-run_description = "test_1KGannots"
+run_description = "test_gotohell"
 shuffle_geno = False
 
 hyperpriors = [None, None, None, None, None]
 hyperparams = None #{"lambda":0.05, "Galpha":2, "Gbeta":0.5}
 cutoffs = ["soft"] #,"soft", "hard", "pval", "min"]
 usedists = ["nodist"] #["dhs", "nodist", "random"]
-usefeats = ["1kg"] #["nofeat", "randomint"]
+usefeats = ["nofeat"] #["nofeat", "randomint", "1kg"]
 for init_params in set_init_params:
     for cutoff in cutoffs:
         for usedist in usedists:
@@ -56,6 +56,7 @@ gtex_gtpath = os.path.join(home, "datasets/gtex/GTEx_450Indiv_genot_imput_info04
 gtex_rpkmpath = os.path.join(home, "datasets/gtex/gtex_wholeblood_normalized.lm_corr.exp.klinikum.txt")
 # gtex_rpkmpath = os.path.join(home, "datasets/gtex/gtex_wholeblood_normalized.lm_corr_final2.exp.txt")
 learn_pickfile_dev = os.path.join("/home/franco", "cbscratch/datasets","GTEx_v6p_chr"+str(chrom)+".pkl")
+# learn_pickfile_dev = os.path.join("/cbscratch/franco/datasets","GTEx_v6p_chr"+str(chrom)+".pkl")
 
 min_snps = 200
 pval_cutoff = 0.001

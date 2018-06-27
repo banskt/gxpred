@@ -11,7 +11,7 @@ def select_genes(info, names):
     allowed = [x.ensembl_id for x in info]
     common  = [x for x in names if x in allowed]
     genes = [x for x in info if x.ensembl_id in common]
-    indices = [names.index(x.ensembl_id) for x in genes]
+    indices = np.array([names.index(x.ensembl_id) for x in genes])
     return genes, indices
 
 

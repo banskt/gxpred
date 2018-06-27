@@ -30,14 +30,14 @@ set_init_params = [[0.9, 0.0, 0.1, 0.1, 0.005]]
 # set_init_params = [[0.9, 0.0, 0.1, 0.001, 0.005]]
 
 #### Set 9
-run_description = "test_1KGannots_1000snps"
+run_description = "test_1KGannots_fixedPI"
 shuffle_geno = False
 
 hyperpriors = [None, None, None, None, None]
 hyperparams = None #{"lambda":0.05, "Galpha":2, "Gbeta":0.5}
-cutoffs = ["soft"] #,"soft", "hard", "pval", "min"]
+cutoffs = ["newsoft"] #,"soft", "hard", "pval", "min"]
 usedists = ["nodist"] #["dhs", "nodist", "random"]
-usefeats = ["1kg"] #["nofeat", "randomint"]
+usefeats = ["nofeat"] #["nofeat", "randomint"]
 for init_params in set_init_params:
     for cutoff in cutoffs:
         for usedist in usedists:

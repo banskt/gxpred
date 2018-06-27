@@ -71,6 +71,7 @@ class Args():
         self.pval_cutoff = args.pval_cutoff
         self.cutoff    = args.cutoff
         self.outdir    = args.outdir
+        self.annots_dir= args.annots_dir
 
     #TODO
     def write_args(self):
@@ -101,6 +102,12 @@ class Args():
                             dest='outdir',
                             metavar='DIR',
                             help='Name of the output directory for storing the model')
+
+        parser.add_argument('--annot-dir',
+                            type=str,
+                            dest='annots_dir',
+                            metavar='ANNOTS_DIR',
+                            help='Directory with functional annotations')
 
         parser.add_argument('--batch-section',
                             type=batch_num,
