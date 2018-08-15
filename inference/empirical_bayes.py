@@ -75,7 +75,6 @@ class EmpiricalBayes:
         except CostFunctionNumericalError:
             self._success = False
 
-
     def _log_marginal_likelihood(self, scaledparams):
         success, lml, der = logmarglik.func_grad(scaledparams, self._genotype, self._phenotype, self._features, self._dist_feature, self._global_zstates)
         if not success:
