@@ -152,6 +152,7 @@ def iterative_inverse(pi, mu, sigma, sigmabg, tau, x, y, zstates, grad = True):
     nterm = np.einsum('i, ij, j', y_minus_M, Sinv, y_minus_M)
     log_normz = - 0.5 * (logdetS + (nsample * np.log(2 * constpi)) + nterm)
 
+
     #logk = - log_probz - log_normz
     #lmlz = log_probz + log_normz + logk
     #kmarglik += np.exp(lmlz)
@@ -171,6 +172,7 @@ def iterative_inverse(pi, mu, sigma, sigmabg, tau, x, y, zstates, grad = True):
         Mz = np.zeros(nsample)
         for zpos in z:
            mod = h / (1 + h * base_BZinv[zpos, zpos])
+           A = mod * np.einsum('i, j -> ij', base_BZinv[:,zpos], base_BZinv[zpos,:])
            BZinv = base_BZinv - mod * np.einsum('i, j -> ij', base_BZinv[:,zpos], base_BZinv[zpos,:])
            logBZdet = base_logBZdet + np.log(1 + h * base_BZinv[zpos, zpos])
            base_BZinv = BZinv
@@ -235,7 +237,6 @@ def gradients(pi, mu, sigma, sigmabg, tau, x, y, zstates, pz, BZinvlist, Sinvlis
         nz = len(z)
         picomp = nz / pi - (nvar - nz) / (1 - pi)
         pi_grad += pz[i] * picomp
-        #print (pi_grad)
 
 
         if nz == 0:

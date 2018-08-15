@@ -11,7 +11,8 @@ def czcompgrad(params, x, y, features, dist_feature, zstates, get_grad=True, get
     '''
     _path = os.path.dirname(__file__)
     # clib = np.ctypeslib.load_library('../lib/logmarglik.so', _path)
-    clib = np.ctypeslib.load_library('../lib/logmarglik_bslmm_fixedPI.so', _path)
+    # clib = np.ctypeslib.load_library('../lib/logmarglik_bslmm_fixedPI.so', _path)
+    clib = np.ctypeslib.load_library('../lib/logmarglik_point_normal.so', _path)
     double_pointer = ctypes.POINTER(ctypes.c_double)
 
     czcomps = clib.logmarglik
@@ -50,14 +51,7 @@ def czcompgrad(params, x, y, features, dist_feature, zstates, get_grad=True, get
     ix_pos = gT_A > 0 
     ix_neg = gT_A <= 0 
     pi_arr = np.zeros(gT_A.shape[0])
-    # pi_arr = 1 / (1 + dist_feature*np.exp(-gT_A))
-
-
-    # pi_arr[ix_pos] = 1 / (1 + np.exp(-gT_A[ix_pos]))
     pi_arr[ix_pos] = 1 / (1 + dist_feature[ix_pos]*np.exp(-gT_A[ix_pos]))
-    
-
-    # pi_arr[ix_neg] = np.exp(gT_A[ix_neg]) / (1 + np.exp(gT_A[ix_neg]))
     pi_arr[ix_neg] = np.exp(gT_A[ix_neg]) / (dist_feature[ix_neg] + np.exp(gT_A[ix_neg]))
 
     mu =      params[ nfeat + 0 ]
@@ -93,7 +87,7 @@ def add_prior(params):
 
 def func_grad(scaledparams, x, y, features, dist_feature, zstates):
     params = hyperparameters.descale(scaledparams)
-    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, features, dist_feature, zstates, get_grad=True)
+    success, logmarglik, zprob, grad, zexp = czcompgrad(params, x, y, features, dist_feature, zstates)
     grad = hyperparameters.gradscale(params, grad)
     return success, -logmarglik, -grad
 

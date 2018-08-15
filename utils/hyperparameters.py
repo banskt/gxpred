@@ -2,24 +2,40 @@
 
 import numpy as np
 
-def scale(params):
+def scale(params, pointnormal = False):
     nhyp = params.shape[0]
     gammas = params [ :(nhyp - 4) ]
     #beta_pi = - np.log((1 / params[0]) - 1)
     beta_mu = 100 * params[ nhyp - 4 ]
     beta_sigma = np.log(params[ nhyp - 3 ])
-    beta_sigmabg = np.log(params[ nhyp - 2 ])
+
+    # current hack, propagate it to source calls later
+    if params[ nhyp - 2 ] == 0:
+        pointnormal = True
+    if pointnormal:
+        beta_sigmabg = 0
+    else:
+        beta_sigmabg = np.log(params[ nhyp - 2 ])
     beta_tau = - 0.5 * np.log(params[ nhyp - 1])
     scaledparams = np.array( list(gammas) + [beta_mu, beta_sigma, beta_sigmabg, beta_tau])
     return scaledparams
     
-def descale(scaledparams):
+def descale(scaledparams, pointnormal = False):
     nhyp = scaledparams.shape[0]
     gammas = scaledparams [:(nhyp - 4)]
     #pi = np.exp(scaledparams[0]) / (1 + np.exp(scaledparams[0]))
     mu = scaledparams[nhyp - 4] / 100
     sigma = np.exp(scaledparams[nhyp - 3])
-    sigmabg = np.exp(scaledparams[nhyp - 2])
+
+    # current hack, propagate it to source calls later
+    if scaledparams[ nhyp - 2 ] == 0:
+        pointnormal = True
+
+    if pointnormal:
+        sigmabg = 0
+    else:
+        sigmabg = np.exp(scaledparams[nhyp - 2])
+
     tau = np.exp(- 2.0 * scaledparams[nhyp - 1])
     params = np.array(list(gammas) + [mu, sigma, sigmabg, tau])
     return params

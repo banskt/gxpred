@@ -62,12 +62,11 @@ def create(scaledparams, x, y, features, dist_feature, cmax, nvar, target):
     old_probsum = np.sum(old_prob)
 
     # Add the ones required
-    print(old_probsum, target)
     selk = prune(newk, prob, old_probsum, target)
     if len(selk) > 0:
         zstates += selk
 
-    print("zstates.py: Working with "+str(len(zstates))+" leading zstates.")
+    #print("zstates.py: Working with "+str(len(zstates))+" leading zstates.")
 
     oldk = selk
 
